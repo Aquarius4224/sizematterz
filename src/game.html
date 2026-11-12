@@ -187,7 +187,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 
 <div class="hud" id="stats">
   <div class="small">長度</div><div class="big" id="sLen">8.0</div>
-  <div class="small" id="sMore">粗細 0.60 · 同化 0</div>
+  <div class="small" id="sMore">粗細 0.60 · 插入 0</div>
 </div>
 <div class="hud" id="board"><div class="title">排行</div><div id="boardRows"></div></div>
 <div class="hud" id="toast"></div>
@@ -210,7 +210,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <button class="sub" id="skillBtn">SKILL <small id="skillName">技能</small></button>
     <button class="sub" id="mapBtn">MAP <small id="mapName">地圖</small></button>
     <button class="back" id="tutBtn">再看一次教學</button>
-    <p class="hint">拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能把整條蛇同化。</p>
+    <p class="hint">拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能插入整條蛇。</p>
   </div>
 </div>
 
@@ -245,7 +245,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 
 <div class="overlay" id="overOv" hidden>
   <div class="card">
-    <h2 id="overTitle">你被同化了</h2>
+    <h2 id="overTitle">你被插入了</h2>
     <p class="statline" id="overStats"></p>
     <div class="row2"><button class="sub" id="menuBtn" style="justify-content:center">主選單</button><button class="play" id="againBtn">再來一局</button></div>
   </div>
@@ -276,11 +276,11 @@ const CFG = {
 };
 // skills a player can bring into a game (AI snakes always use boost)
 const SKILLS = {
-  boost: { name: '加速', cd: 0,  desc: '按住加速。尾巴的洞會一直流水，身體慢慢變短變細（扣分）。' },
-  swap:  { name: '頭尾交換', cd: 30, desc: '頭往內縮變成新的尾巴，原本的尾巴冒出頭來，往反方向走。' },
-  guard: { name: '縮緊', cd: 30, desc: '尾巴洞口縮起來，3 秒內不會被同化。' },
-  spray: { name: '噴射', cd: 0, gauge: true, desc: '按住從嘴巴噴出跟身體同色的液體，地上留下水灘 5 秒，別的蛇踩到會減速 30%。滿槽可噴 5 秒，放開後約 30 秒補滿。' },
-  ouro:  { name: '銜尾蛇', cd: 15, passive: true, desc: '不用按鍵：把頭繞進自己的尾巴，就會咬住自己 5 秒，這段時間尾巴不會被同化。' },
+  boost: { name: '加速', cd: 0,  desc: '按住加速。' },
+  swap:  { name: '頭尾交換', cd: 30, desc: '頭往內縮變成新的尾巴。' },
+  guard: { name: '縮緊', cd: 30, desc: '縮緊洞口，把敵人擠出來。' },
+  spray: { name: '噴射', cd: 0, gauge: true, desc: '噴出減速粘液。' },
+  ouro:  { name: '銜尾蛇', cd: 15, passive: true, desc: '把頭插入自己尾巴' },
 };
 const COS_CONE = Math.cos(CFG.CONE);
 // ---- MAP: the bathroom from Chiu's floor plan (1 unit ≈ 10.8 px of the 1448×1086 image) ----
@@ -1968,18 +1968,18 @@ function handleEvents() {
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(`被「${B.name}」擠出來了！`); if (B === me) toast(`把「${A.name}」擠出去了！`); continue; }
     if (ev.type === 'tissue') { if (A === me) toast('黏到衛生紙了…變慢！'); continue; }
-    if (ev.type === 'bubble') { if (A === me) toast('鑽進泡泡了！5 秒內不會被同化'); continue; }
+    if (ev.type === 'bubble') { if (A === me) toast('鑽進泡泡了！5 秒內不會被插入'); continue; }
     if (ev.type === 'pop') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffe6ee'); if (A === me) toast('泡泡破了！'); continue; }
     if (ev.type === 'bounce') { if (A === me) toast(`「${B.name}」有泡泡保護，彈開了`); if (B === me) toast('泡泡把對方彈開了！'); continue; }
-    if (ev.type === 'skill') { if (A === me) toast({ swap: '頭尾交換！', guard: '縮緊！3 秒不會被同化', ouro: '銜尾蛇！咬住自己 5 秒' }[ev.skill]); continue; }
+    if (ev.type === 'skill') { if (A === me) toast({ swap: '頭尾交換！', guard: '縮緊！3 秒內不會被插入', ouro: '銜尾蛇！咬住自己 5 秒' }[ev.skill]); continue; }
     if (ev.type !== 'merged') continue;
     dropView(ev.b); spawnJelly(ev);
-    if (A === me) toast(`同化了「${B.name}」！`);
+    if (A === me) toast(`插入了「${B.name}」！`);
     if (tut) { tutMerged(A, B); continue; }
     if (B === me) {
       running = false; camFollow = A;
-      document.getElementById('overTitle').textContent = `你被「${A.name}」從尾巴同化了`;
-      document.getElementById('overStats').textContent = `最長 ${me.bestLen.toFixed(1)} · 同化 ${me.absorbed} 條`;
+      document.getElementById('overTitle').textContent = `你被「${A.name}」從尾巴插入了`;
+      document.getElementById('overStats').textContent = `最長 ${me.bestLen.toFixed(1)} · 插入 ${me.absorbed} 條`;
       setTimeout(() => { document.getElementById('overOv').hidden = false; }, 900);
     }
     const g0 = gen;
@@ -2000,7 +2000,7 @@ function updateHud() {
   if (me) {
     me.bestLen = Math.max(me.bestLen || 0, me.len);
     sLen.textContent = me.len.toFixed(1);
-    sMore.textContent = `粗細 ${me.r.toFixed(2)} · 同化 ${me.absorbed}`;
+    sMore.textContent = `粗細 ${me.r.toFixed(2)} · 插入 ${me.absorbed}`;
   }
   const top = Sim.snakes.filter(s => s.alive).sort((a, b) => b.len - a.len).slice(0, 5);
   boardRows.innerHTML = top.map(s => `<div class="row${s.isPlayer ? ' me' : ''}"><span class="dot" style="background:${s.color}"></span><span>${s.name}</span><span>${s.len.toFixed(0)}</span></div>`).join('');
@@ -2277,7 +2277,7 @@ function updateTut(dt) {
       const d = placeDummy(), e = Sim.addSnake(false, 3);
       e.ai = null; e.still = true; e.invuln = 0; e.name = '練習蛇'; e.len = e.lenTarget = 10;
       setSnakeAt(e, d.x, d.z, d.dir); tut.dummy = e;
-      tutShow(3, '同化', '前面出現了一條不會動的蛇。從牠尾巴的正後方（地上扇形的判定範圍內）把頭撞進去，就能同化牠，讓自己變大！');
+      tutShow(3, '插入', '前面出現了一條不會動的蛇。從牠尾巴的正後方（地上扇形的判定範圍內）把頭撞進去，就能插入牠，讓自己變大！');
     }
   } else if (tut.step === 3 && tut.t > 2.2 && !tut.hunter) { // ambush from behind
     const e = Sim.addSnake(false, 5); e.ai = null; e.invuln = 0; e.name = '偷襲蛇'; e.speedK = 2.2; e.len = e.lenTarget = 14;
@@ -2288,10 +2288,10 @@ function updateTut(dt) {
   } else if (tut.step === 4 && tut.t > 6) finishTutorial();
 }
 function tutMerged(A, B) {
-  if (A === me && B === tut.dummy) { tutGo(3); tutShow(3, '同化成功！', '做得好，你把牠整條同化了，身體也變大了。不過……'); }
+  if (A === me && B === tut.dummy) { tutGo(3); tutShow(3, '插入成功！', '做得好，你成功插入牠了，身體也變大了。不過……'); }
   else if (B === me) {
     camFollow = A; running = false; tutGo(4);
-    tutShow(4, '你被同化了', '別的蛇從你的尾巴後方撞進來，你就會被整條同化，遊戲結束。保護好自己的尾巴，去同化別人吧！',
+    tutShow(4, '你被插入了', '別的蛇從你的尾巴後方撞進來，你就會被插入，遊戲結束。保護好自己的尾巴，去插入別人吧！',
       '<button class="play go" id="tutDone">前往主選單</button>');
     document.getElementById('tutDone').addEventListener('click', finishTutorial);
   }
