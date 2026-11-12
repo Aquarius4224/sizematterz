@@ -16,3 +16,7 @@
   - `art/title4.js`：標題動畫
   - `glyphs.py`、`bl_build.py`、`comp.py`：先前的 Blender 充氣字實驗（已暫停）
 - `previews/`：各版本截圖
+
+## 音樂
+
+- 選單／開場：“Bit Shift” Kevin MacLeod (incompetech.com)，授權 CC BY 4.0：https://creativecommons.org/licenses/by/4.0/
