@@ -1672,7 +1672,7 @@ function updateSkillBtn() {
   const s = me && me.alive ? me : null, sk = s ? s.skill : settings.skill;
   skillLbl.textContent = SKILLS[sk].name;
   let txt = '', p = 0;
-  if (s && s.ouroT > 0) { txt = '咬'; p = 100; }
+  if (s && s.ouroT > 0) { txt = '進入'; p = 100; }
   else if (s && SKILLS[sk].gauge) { p = (1 - s.ink) * 100; } // 噴射: the ring shows how much is left in the tank
   else if (s && s.cd > 0) { txt = String(Math.ceil(s.cd)); p = s.cd / (SKILLS[sk].cd || 1) * 100; }
   const key = txt + '|' + Math.round(p);
@@ -1979,8 +1979,8 @@ function handleEvents() {
     const A = Sim.snakes.find(s => s.id === ev.a), B = Sim.snakes.find(s => s.id === ev.b);
     if (ev.type === 'absorb') {
       spawnWave(ev.x, ev.z, ev.color);
-      if (A === me) toast(`咬住「${B.name}」了！`);
-      if (B === me) toast(me.skill === 'guard' ? `被「${A.name}」咬住了！快按縮緊或咬別人的尾巴把牠擠出去` : `被「${A.name}」咬住了！快咬別人的尾巴把牠擠出去`);
+      if (A === me) toast(`進入「${B.name}」了！`);
+      if (B === me) toast(me.skill === 'guard' ? `被「${A.name}」進入了！快按縮緊或咬別人的尾巴把牠擠出去` : `被「${A.name}」進入了！快進入別人的尾巴把牠擠出去`);
       continue;
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(`被「${B.name}」擠出來了！`); if (B === me) toast(`把「${A.name}」擠出去了！`); continue; }
@@ -1988,7 +1988,7 @@ function handleEvents() {
     if (ev.type === 'bubble') { if (A === me) toast('鑽進泡泡了！5 秒內不會被插入'); continue; }
     if (ev.type === 'pop') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffe6ee'); if (A === me) toast('泡泡破了！'); continue; }
     if (ev.type === 'bounce') { if (A === me) toast(`「${B.name}」有泡泡保護，彈開了`); if (B === me) toast('泡泡把對方彈開了！'); continue; }
-    if (ev.type === 'skill') { if (A === me) toast({ swap: '頭尾交換！', guard: '縮緊！3 秒內不會被插入', ouro: '銜尾蛇！咬住自己 5 秒' }[ev.skill]); continue; }
+    if (ev.type === 'skill') { if (A === me) toast({ swap: '頭尾交換！', guard: '縮緊！3 秒內不會被插入', ouro: '銜尾蛇！進入自己 5 秒' }[ev.skill]); continue; }
     if (ev.type !== 'merged') continue;
     dropView(ev.b); spawnJelly(ev);
     if (A === me) toast(`插入了「${B.name}」！`);
