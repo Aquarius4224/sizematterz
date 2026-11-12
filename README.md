@@ -1,0 +1,17 @@
+# SIZE MATTERZ（同化蛇）
+
+斜俯視 3D 貪食蛇原型，手機優先。從別人尾巴後方 ±45° 撞進去，就能把整條蛇同化。
+
+## 試玩
+- 線上：https://aquarius4224.github.io/sizematterz/
+- 離線：下載 `standalone/同化蛇.html`，直接用瀏覽器開（three.js 已內嵌，不需網路）
+
+## 檔案
+- `index.html`：遊戲本體（單一檔案，Three.js r128 由 cdnjs 載入）
+- `standalone/同化蛇.html`：離線版
+- `title-src/`：開場標題素材
+  - `art/SIZE_MATTERZ_layers.ora`：標題分層圖（19 層，可用 Krita / GIMP 開啟）
+  - `art/gen_art.py`：把 ORA 圖層轉成內嵌的 `TITLE_ART`
+  - `art/title4.js`：標題動畫
+  - `glyphs.py`、`bl_build.py`、`comp.py`：先前的 Blender 充氣字實驗（已暫停）
+- `previews/`：各版本截圖
