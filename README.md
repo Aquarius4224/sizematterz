@@ -7,8 +7,9 @@
 - 離線：下載 `standalone/同化蛇.html`，直接用瀏覽器開（three.js 已內嵌，不需網路）
 
 ## 檔案
-- `index.html`：遊戲本體（單一檔案，Three.js r128 由 cdnjs 載入）
-- `standalone/同化蛇.html`：離線版
+- `index.html`：可直接上線的完整版（含手機 viewport 設定、three.js 內嵌），GitHub Pages 用這個
+- `standalone/同化蛇.html`：同一份離線版
+- `src/game.html`：遊戲原始碼（Claude Artifact 用的片段，沒有 head / viewport，不能直接當網頁上線）
 - `title-src/`：開場標題素材
   - `art/SIZE_MATTERZ_layers.ora`：標題分層圖（19 層，可用 Krita / GIMP 開啟）
   - `art/gen_art.py`：把 ORA 圖層轉成內嵌的 `TITLE_ART`
