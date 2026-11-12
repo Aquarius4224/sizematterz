@@ -1967,7 +1967,7 @@ function handleEvents() {
     if (ev.type === 'absorb') {
       spawnWave(ev.x, ev.z, ev.color);
       if (A === me) toast(`進入「${B.name}」了！`);
-      if (B === me) toast(me.skill === 'guard' ? `被「${A.name}」進入了！快按縮緊或咬別人的尾巴把牠擠出去` : `被「${A.name}」進入了！快進入別人的尾巴把牠擠出去`);
+      if (B === me) toast(me.skill === 'guard' ? `被「${A.name}」進入了！快按縮緊或進入別人的尾巴把牠擠出去` : `被「${A.name}」進入了！快進入別人的尾巴把牠擠出去`);
       continue;
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(`被「${B.name}」擠出來了！`); if (B === me) toast(`把「${A.name}」擠出去了！`); continue; }
