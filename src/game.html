@@ -1972,9 +1972,9 @@ function handleEvents() {
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(`被「${B.name}」擠出來了！`); if (B === me) toast(`把「${A.name}」擠出去了！`); continue; }
     if (ev.type === 'tissue') { if (A === me) toast('黏到衛生紙了…變慢！'); continue; }
-    if (ev.type === 'bubble') { if (A === me) toast('鑽進泡泡了！5 秒內不會被插入'); continue; }
+    if (ev.type === 'bubble') { if (A === me) toast('鑽進保險套了！5 秒內不會被插入'); continue; }
     if (ev.type === 'pop') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffe6ee'); if (A === me) toast('泡泡破了！'); continue; }
-    if (ev.type === 'bounce') { if (A === me) toast(`「${B.name}」有泡泡保護，彈開了`); if (B === me) toast('泡泡把對方彈開了！'); continue; }
+    if (ev.type === 'bounce') { if (A === me) toast(`「${B.name}」有泡泡保護，彈開了`); if (B === me) toast('保險套把對方彈開了！'); continue; }
     if (ev.type === 'skill') { if (A === me) toast({ swap: '頭尾交換！', guard: '縮緊！3 秒內不會被插入', ouro: '銜尾蛇！進入自己 5 秒' }[ev.skill]); continue; }
     if (ev.type !== 'merged') continue;
     dropView(ev.b); spawnJelly(ev);
