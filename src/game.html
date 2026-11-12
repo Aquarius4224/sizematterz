@@ -356,6 +356,36 @@ function randomFree(m) {
 }
 const COLORS = ['#6c8cff', '#ffd166', '#4fd1a5', '#b07cff', '#ff9f43', '#8bd450', '#5cc8ff', '#ff8fd1', '#f25f5c', '#c9b8ff'];
 const NAMES = ['藍莓', '芒果', '薄荷', '葡萄', '橘子', '芭樂', '蘇打', '桃子', '番茄', '芋頭'];
+// computer snakes: each look (a plain colour by index, or a pattern skin) has a few names that fit it
+const AI_LOOKS = [
+  { c: 0, names: ['藍莓', '藍寶石', '海鹽'] }, { c: 1, names: ['芒果', '蛋黃', '鳳梨'] }, { c: 2, names: ['薄荷', '抹茶', '青蘋果'] },
+  { c: 3, names: ['葡萄', '紫薯', '薰衣草'] }, { c: 4, names: ['橘子', '胡蘿蔔', '南瓜'] }, { c: 5, names: ['芭樂', '奇異果', '毛豆'] },
+  { c: 6, names: ['蘇打', '彈珠汽水', '冰沙'] }, { c: 7, names: ['桃子', '草莓牛奶', '棉花糖'] }, { c: 8, names: ['番茄', '辣椒', '西瓜'] },
+  { c: 9, names: ['芋頭', '芋圓', '紫米'] },
+  { skin: 'spotted', names: ['斑點狗', '乳牛', '花生醬'] }, { skin: 'banana', names: ['香蕉船', '巧克力香蕉'] },
+  { skin: 'blueballs', names: ['藍蛋蛋', '藍色小球'] }, { skin: 'rocky', names: ['石頭棒', '硬漢', '花崗岩'] },
+  { skin: 'sausage', names: ['粉紅香腸', '小香腸'] }, { skin: 'pickle', names: ['酸黃瓜', '醃瓜'] },
+  { skin: 'candy', names: ['拐杖糖', '聖誕糖'] }, { skin: 'chipolata', names: ['烤腸', '大腸包小腸'] },
+  { skin: 'bubble', names: ['肥皂泡', '彩虹泡泡'] }, { skin: 'eggplant', names: ['茄子', '紫茄'] },
+  { skin: 'hotdog', names: ['熱狗堡', '大熱狗'] }, { skin: 'golden', names: ['黃金棒', '金條', '土豪'] },
+  { skin: 'pole', names: ['鋼管', '銀棒'] }, { skin: 'cucumber', names: ['小黃瓜', '大黃瓜'] },
+  { skin: 'frosty', names: ['冰棒', '雪條', '冷凍庫'] }, { skin: 'choco', names: ['巧克力棒', '彩針棒'] },
+  { skin: 'lava', names: ['熔岩棒', '火山'] }, { skin: 'zebra', names: ['斑馬', '黑白棍'] },
+  { skin: 'wiggler', names: ['扭扭蟲', '螢光蟲'] },
+];
+// pick a look and name nobody alive is using; about 2 in 3 computer snakes wear a pattern
+function pickAILook(snakes, playerLook) {
+  const live = snakes.filter(s => s.alive), names = new Set(live.map(s => s.name));
+  const used = new Set(live.map(s => s.skin || s.color)); if (playerLook) used.add(playerLook);
+  const key = L => L.skin || COLORS[L.c];
+  const want = Math.random() < .66 ? (L => !!L.skin) : (L => !L.skin);
+  let pool = AI_LOOKS.filter(L => want(L) && !used.has(key(L)));
+  if (!pool.length) pool = AI_LOOKS.filter(L => !used.has(key(L)));
+  if (!pool.length) pool = AI_LOOKS;
+  const L = pool[(Math.random() * pool.length) | 0];
+  const free = L.names.filter(n => !names.has(n));
+  return { skin: L.skin || null, color: L.skin ? PATTERNS[L.skin].avg : COLORS[L.c], name: (free.length ? free : L.names)[(Math.random() * (free.length || L.names.length)) | 0] };
+}
 const rnd = (a, b) => a + Math.random() * (b - a);
 const wrapA = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
 
@@ -380,13 +410,13 @@ const Sim = {
     }
     return randomFree(4);
   },
-  addSnake(isPlayer, colorIdx) {
+  addSnake(isPlayer, colorIdx, look) {
     const p = this.spawnPoint(), dir = Math.atan2(-p.z, -p.x) + rnd(-1, 1);
     const ci = colorIdx ?? ((Math.random() * COLORS.length) | 0);
     const s = {
-      id: this.nextId++, isPlayer, color: isPlayer ? (this.playerPattern ? PATTERNS[this.playerPattern].avg : (this.playerColor || '#ff5a7a')) : COLORS[ci],
-      skin: isPlayer ? (this.playerPattern || null) : null,
-      skill: isPlayer ? (this.playerSkill || 'boost') : 'boost', cd: 0, swapT: 0, guardT: 0, ouroT: 0, ink: 1, spraying: false, sprayAcc: 0, slowed: false, name: isPlayer ? '你' : NAMES[ci],
+      id: this.nextId++, isPlayer, color: isPlayer ? (this.playerPattern ? PATTERNS[this.playerPattern].avg : (this.playerColor || '#ff5a7a')) : look ? look.color : COLORS[ci],
+      skin: isPlayer ? (this.playerPattern || null) : look ? look.skin : null,
+      skill: isPlayer ? (this.playerSkill || 'boost') : 'boost', cd: 0, swapT: 0, guardT: 0, ouroT: 0, ink: 1, spraying: false, sprayAcc: 0, slowed: false, name: isPlayer ? '你' : look ? look.name : NAMES[ci],
       x: p.x, z: p.z, dir, target: dir, len: CFG.START_LEN, lenTarget: CFG.START_LEN,
       r: CFG.START_R, rTarget: CFG.START_R, trail: [], body: [], alive: true, invuln: 2.5,
       boost: false, absorbed: 0, pulse: 0, dropT: 0,
@@ -1729,8 +1759,7 @@ function newGame() {
   Sim.reset();
   Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern;
   me = Sim.addSnake(true);
-  const used = new Set(); { const pc = COLORS.indexOf(settings.color); if (pc >= 0) used.add(pc); }
-  for (let i = 0; i < CFG.AI; i++) { let c; do { c = (Math.random() * COLORS.length) | 0; } while (used.has(c) && used.size < COLORS.length); used.add(c); Sim.addSnake(false, c); }
+  for (let i = 0; i < CFG.AI; i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   camFollow = me; running = true;
   document.getElementById('overOv').hidden = true;
   camPos.set(me.x, 40, me.z + 30);
@@ -1990,9 +2019,7 @@ function handleEvents() {
     if (!B.isPlayer) setTimeout(() => { // keep the arena populated
       if (g0 !== gen) return;
       Sim.snakes = Sim.snakes.filter(s => s !== B);
-      const taken = new Set(Sim.snakes.filter(s => s.alive).map(s => s.color));
-      let c = COLORS.findIndex(col => !taken.has(col)); if (c < 0) c = 0;
-      Sim.addSnake(false, c);
+      Sim.addSnake(false, null, pickAILook(Sim.snakes));
     }, 2500);
   }
   Sim.events.length = 0;
@@ -2315,7 +2342,7 @@ function startAttract() {
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
   buildMap(settings.map);
-  Sim.reset(); for (let i = 0; i < CFG.AI; i++) Sim.addSnake(false, i);
+  Sim.reset(); for (let i = 0; i < CFG.AI; i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   me = null; running = false; camFollow = Sim.snakes[0];
 }
 startAttract();
