@@ -549,6 +549,20 @@ const MAPS = {
     condom: { from: [-30, -20], spots: [[-38, 3], [-37, 14], [-45, 15.5], [-53, 15.5], [-39, -1.5], [-48, 19]] },
   },
 };
+// picnic: a big checked blanket on a lawn. The blanket is the play area; food and tableware on it are obstacles.
+{ const ob = (name, cx, cz, w, d) => ({ name, x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 });
+  MAPS.picnic = {
+    name: '野餐', name_en: 'Picnic', desc: '草地上的大野餐墊，最大的地圖。食物和餐具是障礙物，打翻的果汁會讓你變慢。', desc_en: 'A big picnic blanket on the lawn, the largest map. Food and tableware are in the way, and spilled juice slows you down.',
+    W: 144, H: 104, door: [0, 0],
+    obstacles: [
+      ob('basket', -52, -34, 24, 16), ob('melon', 44, -32, 14, 14), ob('plates', -8, -40, 14, 12), ob('bottle', 58, 8, 6, 22),
+      ob('cake', -50, 26, 16, 16), ob('bowl', 34, 38, 13, 13), ob('baguette', -6, 42, 26, 5),
+      ob('fork', 12, 24, 3, 18), ob('knife', 17, 24, 3, 18), ob('cup1', 24, -6, 6, 6), ob('cup2', -26, 6, 6, 6), ob('cup3', 4, -18, 6, 6),
+    ],
+    spills: [[51, -9, 6, 4], [12, -12, 5, 3.5], [-35, 12, 5, 4]], // spilled juice: ellipses (centre x, z, radii) that slow you like spray puddles
+    outdoor: true,
+  };
+}
 // the rooms are drawn in the units above and played at MAP_SCALE times that size: MAPS holds the scaled copy the game uses,
 // MAP_RAW the drawing units the room builders use (buildMap scales the built room to match)
 const MAP_SCALE = 2, MAP_RAW = {};
@@ -562,10 +576,12 @@ for (const id in MAPS) {
     wet: r.wet && r.wet.map(w => w.map(v => v * k)),
     tissues: r.tissues && Object.assign({}, r.tissues, { cx: r.tissues.cx * k, cz: r.tissues.cz * k, rMin: r.tissues.rMin * k, rMax: r.tissues.rMax * k }),
     condom: r.condom && { from: r.condom.from.map(v => v * k), spots: r.condom.spots.map(p => p.map(v => v * k)) },
+    spills: r.spills && r.spills.map(w => w.map(v => v * k)),
   });
 }
 let MAP = MAPS.bathroom, MAP_ID = 'bathroom';
 const inShower = (x, z) => !!MAP.shower && x > MAP.shower.x0 && x < MAP.shower.x1 && z > MAP.shower.z0 && z < MAP.shower.z1;
+const onSpill = (x, z) => (MAP.spills || []).some(([cx, cz, rx, rz]) => ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2 < 1);
 const onWet = (x, z) => inShower(x, z) && (MAP.wet || []).some(([cx, cz, rx, rz]) => ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2 < 1);
 function mapFree(x, z, m) { // inside the floor and clear of every fixture by margin m
   if (Math.abs(x) > MAP.W / 2 - m || Math.abs(z) > MAP.H / 2 - m) return false;
@@ -956,7 +972,7 @@ const Sim = {
       if (s.swapT > 0) { const was = s.swapT; s.swapT = Math.max(0, s.swapT - dt); if (was > CFG.SWAP_T / 2 && s.swapT <= CFG.SWAP_T / 2) this.swapEnds(s); }
       if (s.spitT > 0) s.spitT -= dt; // nearly stops while spitting
       if (s.skill === 'spray') this.stepSpray(s, dt);
-      s.slowed = this.inPuddle(s); s.wet = onWet(s.x, s.z);
+      s.slowed = this.inPuddle(s) || onSpill(s.x, s.z); s.wet = onWet(s.x, s.z);
       if (m && m.a === s) continue; // biter's head is locked inside the front snake's tail (see stepMerge)
       if (s.still && !m) continue; // tutorial dummy: doesn't move until it gets absorbed
       if (s.ouroT > 0) { this.stepOuro(s, dt); continue; } // biting its own tail: holds still
@@ -1555,6 +1571,75 @@ function makeBedroom(k) {
   }
 }
 
+function makePicnic(k) {
+  const { add, std, group } = k, W = MAP.W, H = MAP.H;
+  const cv = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; };
+  const tex = (t, mat) => { mat.map = t; return mat; };
+  // lawn all around
+  const gt = cv(256, 256, (g, w, h) => { g.fillStyle = '#6fae4a'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) { g.fillStyle = ['#5d9c3c', '#86c25c', '#4f8a33', '#9ad06a'][i % 4]; g.globalAlpha = .55; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 4 + Math.random() * 4); } g.globalAlpha = 1; });
+  gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set((W + 400) / 14, (H + 400) / 14);
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(W + 400, H + 400), new THREE.MeshStandardMaterial({ map: gt, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.position.y = -0.06; m.receiveShadow = true; k.root.add(m); }
+  // the blanket: red and white gingham, with a hem
+  const bt = cv(256, 256, (g, w, h) => { g.fillStyle = '#fbf6ee'; g.fillRect(0, 0, w, h); const n = 4, c = w / n;
+    g.fillStyle = 'rgba(214,52,58,.55)'; for (let i = 0; i < n; i += 2) { g.fillRect(i * c, 0, c, h); g.fillRect(0, i * c, w, c); }
+    for (let i = 0; i < 1800; i++) { g.fillStyle = Math.random() < .5 ? 'rgba(255,255,255,.25)' : 'rgba(120,30,30,.12)'; g.fillRect(Math.random() * w, Math.random() * h, 1, 1); } });
+  bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.repeat.set(W / 7, H / 7);
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: bt, roughness: .95 })); m.rotation.x = -Math.PI / 2; m.position.y = 0.005; m.receiveShadow = true; k.root.add(m); }
+  { const hem = std('#c9353b', .9), t = 1.4;
+    add(new THREE.BoxGeometry(W + 2 * t, 0.12, t), hem, 0, 0.06, -H / 2 - t / 2, false); add(new THREE.BoxGeometry(W + 2 * t, 0.12, t), hem, 0, 0.06, H / 2 + t / 2, false);
+    add(new THREE.BoxGeometry(t, 0.12, H), hem, -W / 2 - t / 2, 0.06, 0, false); add(new THREE.BoxGeometry(t, 0.12, H), hem, W / 2 + t / 2, 0.06, 0, false); }
+  // wicker basket with its lid and handle
+  { group(); const wt = cv(128, 128, (g, w, h) => { g.fillStyle = '#b57d43'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 16) { g.fillStyle = (x / 16 + y / 8) % 2 ? '#d29a5a' : '#9c6a37'; g.fillRect(x + ((y / 8) % 2) * 8, y, 14, 6); } });
+    wt.wrapS = wt.wrapT = THREE.RepeatWrapping; wt.repeat.set(3, 1.5);
+    add(new THREE.BoxGeometry(23, 8, 15), tex(wt, std('#ffffff', .9)), -52, 4, -34);
+    add(new THREE.BoxGeometry(24, 1.2, 16), std('#9c6a37', .85), -52, 8.6, -34);
+    const hd = add(new THREE.TorusGeometry(6, 0.6, 8, 20, Math.PI), std('#8a5a2c', .8), -52, 9.2, -34); }
+  // whole watermelon
+  { group(); const mt = cv(256, 128, (g, w, h) => { g.fillStyle = '#2f7a2f'; g.fillRect(0, 0, w, h); g.fillStyle = '#1c4f1f'; for (let i = 0; i < 12; i++) { g.beginPath(); for (let y = 0; y <= h; y += 4) g.lineTo(i * w / 12 + 6 * Math.sin(y * .2 + i), y); g.lineWidth = 7; g.strokeStyle = '#1c4f1f'; g.stroke(); } });
+    const m = add(new THREE.SphereGeometry(7, 32, 20), tex(mt, std('#ffffff', .45)), 44, 5.6, -32); m.scale.set(1, 0.82, 1); m.rotation.z = Math.PI / 2; }
+  // plates with sandwiches
+  { group(); for (let i = 0; i < 3; i++) add(new THREE.CylinderGeometry(6.3, 5.6, 0.45, 32), std('#f4f4f2', .35), -8, 0.25 + i * 0.5, -40);
+    const bread = std('#f2d7a0', .8), crust = std('#c48a45', .8), fill = std('#7cbf4f', .7), ham = std('#f09aa5', .7);
+    for (const [x, z, r] of [[-10, -41.5, 0.4], [-5.5, -38.5, 2.6]]) { for (const [y, m] of [[1.9, bread], [2.5, ham], [2.8, fill], [3.4, bread]]) { const t = add(new THREE.CylinderGeometry(3.2, 3.2, m === bread ? 0.7 : 0.35, 3), m, x, y, z); t.rotation.y = r; } } }
+  // juice bottle lying on its side
+  { group(); const glass = new THREE.MeshStandardMaterial({ color: '#ffb340', roughness: .15, transparent: true, opacity: .85 });
+    const b = add(new THREE.CylinderGeometry(3, 3, 16, 24), glass, 58, 3, 10); b.rotation.x = Math.PI / 2;
+    const nk = add(new THREE.CylinderGeometry(1.3, 3, 4, 20), glass, 58, 3, 0); nk.rotation.x = -Math.PI / 2;
+    const cp = add(new THREE.CylinderGeometry(1.4, 1.4, 1.6, 16), std('#e8423c', .5), 58, 3, -2.8); cp.rotation.x = Math.PI / 2;
+    const lb = add(new THREE.CylinderGeometry(3.08, 3.08, 6, 24, 1, true), std('#fff4d6', .7), 58, 3, 10); lb.rotation.x = Math.PI / 2; }
+  // cake on a plate
+  { group(); add(new THREE.CylinderGeometry(8, 7.4, 0.5, 32), std('#f4f4f2', .35), -50, 0.25, 26);
+    add(new THREE.CylinderGeometry(6, 6, 4.4, 32), std('#fff3df', .7), -50, 2.7, 26);
+    add(new THREE.CylinderGeometry(6.15, 6.15, 0.9, 32), std('#f7a8c0', .6), -50, 5.1, 26);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; add(new THREE.SphereGeometry(0.85, 10, 8), std('#e3263a', .4), -50 + Math.cos(a) * 4.3, 6, 26 + Math.sin(a) * 4.3); } }
+  // bowl of grapes and fruit
+  { group(); const bw = add(new THREE.SphereGeometry(6.4, 28, 14, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), std('#5aa3d6', .4), 34, 3.6, 38); bw.material.side = THREE.DoubleSide;
+    for (let i = 0; i < 26; i++) { const a = i * 2.4, r = 1 + (i % 7) * 0.65; add(new THREE.SphereGeometry(1.05, 10, 8), std(i % 5 === 0 ? '#9ccf4a' : '#6e2f86', .35), 34 + Math.cos(a) * r, 3.4 + (i % 3) * 0.7, 38 + Math.sin(a) * r); } }
+  group(null);
+  // baguette
+  { const crust = std('#d39a52', .75), b = add(new THREE.CylinderGeometry(2.3, 2.3, 21, 20), crust, -6, 2.2, 42); b.rotation.z = Math.PI / 2;
+    for (const x of [-16.5, 4.5]) add(new THREE.SphereGeometry(2.3, 16, 12), crust, x, 2.2, 42);
+    for (let i = 0; i < 5; i++) { const c = add(new THREE.BoxGeometry(0.6, 0.3, 3.4), std('#f0d29a', .9), -14 + i * 4, 4.4, 42); c.rotation.y = 0.6; } }
+  // fork and knife
+  { const steel = new THREE.MeshStandardMaterial({ color: '#d9dde2', metalness: .85, roughness: .25 });
+    add(new THREE.BoxGeometry(1.2, 0.35, 11), steel, 12, 0.2, 28.5);
+    add(new THREE.BoxGeometry(2.6, 0.35, 2), steel, 12, 0.2, 22);
+    for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.4, 0.35, 5), steel, 10.95 + i * 0.7, 0.2, 18.6);
+    add(new THREE.BoxGeometry(1.3, 0.45, 8), std('#3a2a20', .6), 17, 0.25, 29.5);
+    add(new THREE.BoxGeometry(2.2, 0.25, 10.5), steel, 17, 0.15, 20); }
+  // paper cups
+  for (const [x, z] of [[24, -6], [-26, 6], [4, -18]]) {
+    group(); const ct = cv(128, 64, (g, w, h) => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); g.fillStyle = '#e8423c'; for (let i = 0; i < w; i += 16) g.fillRect(i, 0, 8, h); });
+    ct.wrapS = THREE.RepeatWrapping;
+    add(new THREE.CylinderGeometry(3, 2.3, 5.5, 24, 1, true), tex(ct, std('#ffffff', .6)), x, 2.75, z).material.side = THREE.DoubleSide;
+    add(new THREE.CircleGeometry(2.9, 24), std('#7a3b1e', .3), x, 4.6, z, false).rotation.x = -Math.PI / 2;
+  }
+  // spilled juice
+  { const jm = new THREE.MeshPhongMaterial({ color: '#ff9f1c', specular: '#ffffff', shininess: 120, transparent: true, opacity: .7, depthWrite: false });
+    for (const [x, z, rx, rz] of MAP.spills) { const m = new THREE.Mesh(puddleGeo, jm); m.position.set(x, 0.03, z); m.scale.set(rx, 1, rz); m.rotation.y = x * 0.37; m.renderOrder = -150000; k.root.add(m); } }
+}
+
 // ---- maps: build / swap the room's meshes ----
 let mapRoot = null, mapShower = null, mapBuilt = null;
 function buildMap(id) {
@@ -1572,7 +1657,8 @@ function buildMap(id) {
   k.add = (geo, mat, x, y, z, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; mapRoot.add(m); return k.track(m); };
   k.box = (o, h, mat, inset = 0) => k.add(new THREE.BoxGeometry(o.x1 - o.x0 - inset * 2, h, o.z1 - o.z0 - inset * 2), mat, (o.x0 + o.x1) / 2, h / 2, (o.z0 + o.z1) / 2);
   MAP = MAP_RAW[id]; // the builders work in drawing units
-  (id === 'bedroom' ? makeBedroom : makeBathroom)(k);
+  ({ bedroom: makeBedroom, picnic: makePicnic }[id] || makeBathroom)(k);
+  { const c = MAP.outdoor ? '#9cc77f' : '#2b2a28'; scene.background.set(c); scene.fog.color.set(c); }
   k.group(null);
   mapShower = MAP.shower ? makeShower(mapRoot) : null;
   MAP = MAPS[id]; mapRoot.scale.setScalar(MAP_SCALE);
