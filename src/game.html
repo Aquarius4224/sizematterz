@@ -69,6 +69,21 @@ body {
 }
 #itemBtn img { width: 34px; height: 34px; pointer-events: none; }
 #itemBtn:disabled { cursor: default; }
+#itemBtn.two::after { content: '2'; position: absolute; right: -4px; top: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--sun); color: #3a2a00; font: 700 11px/18px var(--font-display); text-align: center; }
+#cardOv .card { width: min(calc(100vw - 24px), 760px); max-width: none; box-sizing: border-box; max-height: calc(100vh - 24px); overflow-y: auto; }
+#cardOv h2 { margin-bottom: 4px; }
+.cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+@media (max-width: 560px) { .cards3 { grid-template-columns: 1fr; gap: 10px; } }
+.gcard { --rc: #9aa0a8; position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px 14px 12px; border-radius: 16px; border: 3px solid var(--rc); background: #fff; cursor: pointer; font: inherit; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,.12); transition: transform .12s ease; }
+.gcard:hover, .gcard:focus-visible { transform: translateY(-3px); }
+.gcard .rar { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--rc); }
+.gcard b { font-size: 18px; }
+.gcard p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+.gcard .stk { font-size: 11px; color: var(--ink-soft); margin-top: auto; }
+.gcard.rare { --rc: #3d8bfd; background: #f2f7ff; }
+.gcard.legend { --rc: #d9a400; background: linear-gradient(135deg, #fff8dc, #fff 45%, #fff3c4); animation: legendGlow 1.6s ease-in-out infinite; }
+.gcard.curse { --rc: #8b5cf6; background: #f6f2ff; }
+@keyframes legendGlow { 50% { box-shadow: 0 0 0 3px rgba(217,164,0,.35), 0 6px 22px rgba(217,164,0,.45); } }
 #itemBtn.full { box-shadow: 0 0 0 3px var(--sun), 0 3px 12px rgba(0,0,0,.18); animation: itemPop .35s ease-out; }
 @keyframes itemPop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: none; } }
 body.tut #itemBtn { display: none; }
@@ -276,6 +291,14 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
   </div>
 </div>
 
+<div class="overlay" id="cardOv" hidden>
+  <div class="card">
+    <h2 id="cardTitle" data-i18n="cards.title">選一張卡</h2>
+    <p class="statline" id="cardSub"></p>
+    <div class="cards3" id="cardRow"></div>
+  </div>
+</div>
+
 <div class="overlay" id="overOv" hidden>
   <div class="card">
     <h2 id="overTitle" data-i18n="over.title">你被插入了</h2>
@@ -302,7 +325,13 @@ const I18N = {
     'menu.mode': 'MODE', 'menu.modeSub': '模式 · {name}', 'mode.title': '選擇模式', 'hud.alive': ' · 剩 {n} 條',
     'mode.classic': '經典', 'mode.classicDesc': '被插入的電腦蛇會重生，盡量長到最大。',
     'mode.br': '吃雞', 'mode.brDesc': '開場 {n} 條蛇，被插入就淘汰、不會重生，最後剩下的那一條獲勝。',
-    'over.rank': '第 {rank} 名（共 {n} 條）', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': '你是最後剩下的一條 · 長度 {len} · 插入 {n} 條',
+    'over.rank': '第 {rank} 名（共 {n} 條）',
+    'mode.endless': '無限', 'mode.endlessDesc': '長度到達門檻（50 起，每輪漲得更多）就從 3 張卡選 1 張，然後縮回開局大小繼續，直到被插入為止。',
+    'hud.round': ' · 第 {n} 輪 · 目標 {len}', 'cards.title': '選一張卡', 'cards.sub': '到達 {len}！選一張帶進下一輪',
+    'rarity.common': '一般', 'rarity.rare': '稀有', 'rarity.legend': '傳說', 'rarity.curse': '詛咒',
+    'card.stack': '已有 {n} / {max}', 'card.noStack': '不可疊加', 'card.none': '無',
+    'toast.card': '獲得「{name}」！', 'toast.revive': '九命怪貓！你復活了', 'toast.squeeze': '緊實！把「{name}」擠出去了', 'toast.reverse': '反插！你吃掉了「{name}」',
+    'over.endless': '撐了 {n} 輪 · 卡片：{cards}', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': '你是最後剩下的一條 · 長度 {len} · 插入 {n} 條',
     'over.title': '你被插入了', 'over.by': '你被「{name}」從尾巴插入了', 'over.stats': '最長 {len} · 插入 {n} 條', 'over.menu': '主選單', 'over.again': '再來一局',
     'toast.ouroHint': '把頭繞進自己的尾巴就會發動', 'toast.enter': '進入「{name}」了！',
     'toast.enteredGuard': '被「{name}」進入了！快按縮緊或進入別人的尾巴把牠擠出去', 'toast.entered': '被「{name}」進入了！快進入別人的尾巴把牠擠出去',
@@ -332,7 +361,13 @@ const I18N = {
     'menu.mode': 'MODE', 'menu.modeSub': '{name}', 'mode.title': 'Choose a mode', 'hud.alive': ' · {n} left',
     'mode.classic': 'Classic', 'mode.classicDesc': 'Plugged computer snakes come back. Grow as big as you can.',
     'mode.br': 'Battle Royale', 'mode.brDesc': '{n} snakes start. Get plugged and you are out for good. The last snake left wins.',
-    'over.rank': 'Placed #{rank} of {n}', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': 'Last snake standing · Length {len} · Plugged {n}',
+    'over.rank': 'Placed #{rank} of {n}',
+    'mode.endless': 'Endless', 'mode.endlessDesc': 'Reach the goal length (50, rising faster each round) to pick 1 of 3 cards, then shrink back and keep going until you get plugged.',
+    'hud.round': ' · Round {n} · Goal {len}', 'cards.title': 'Pick a card', 'cards.sub': 'You hit {len}! Take one into the next round',
+    'rarity.common': 'COMMON', 'rarity.rare': 'RARE', 'rarity.legend': 'LEGENDARY', 'rarity.curse': 'CURSED',
+    'card.stack': 'Have {n} / {max}', 'card.noStack': 'Doesn’t stack', 'card.none': 'none',
+    'toast.card': 'Got {name}!', 'toast.revive': 'Nine Lives! You’re back', 'toast.squeeze': 'Tight! Squeezed {name} out', 'toast.reverse': 'Reversal! You ate {name}',
+    'over.endless': 'Lasted {n} rounds · Cards: {cards}', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': 'Last snake standing · Length {len} · Plugged {n}',
     'over.title': 'You got plugged', 'over.by': '{name} plugged you from behind', 'over.stats': 'Longest {len} · Plugged {n}', 'over.menu': 'Main menu', 'over.again': 'Play again',
     'toast.ouroHint': 'Loop your head into your own tail to trigger it', 'toast.enter': 'You’re in {name}!',
     'toast.enteredGuard': '{name} got in you! Clench, or get into someone’s tail to push it out', 'toast.entered': '{name} got in you! Get into someone’s tail to push it out',
@@ -386,6 +421,41 @@ const CFG = {
 };
 // items: picked up from the floating orbs, one held at a time, used from the small button next to the skill button
 const ITEMS = ['condom', 'tissue', 'lube', 'pill'];
+// 無限模式 cards. r: common / rare / legend / curse; max: how many times it can be taken (1 = doesn't stack)
+const CARD_W = { common: 62, rare: 25, legend: 5, curse: 8 };
+const CARDS = [
+  { id: 'stamina', r: 'common', max: 4, name: '持久力', desc: '加速消耗的長度 -15%', name_en: 'Stamina', desc_en: 'Boosting costs 15% less length' },
+  { id: 'agile', r: 'common', max: 5, name: '靈活腰', desc: '轉向速度 +10%', name_en: 'Flexible Hips', desc_en: 'Turn 10% faster' },
+  { id: 'appetite', r: 'common', max: 5, name: '大胃口', desc: '插入別人時獲得的長度 +15%', name_en: 'Big Appetite', desc_en: '+15% length from each plug' },
+  { id: 'magnet', r: 'common', max: 3, name: '道具磁鐵', desc: '撿道具球的範圍 +30%', name_en: 'Item Magnet', desc_en: 'Pick up orbs from 30% farther' },
+  { id: 'condomPlus', r: 'common', max: 4, name: '長效保險套', desc: '保險套時間 +1.5 秒', name_en: 'Long-Lasting', desc_en: 'Condoms last 1.5s longer' },
+  { id: 'lubePlus', r: 'common', max: 4, name: '加量潤滑', desc: '潤滑油時間 +1 秒', name_en: 'Extra Lube', desc_en: 'Lube lasts 1s longer' },
+  { id: 'quickCd', r: 'common', max: 5, name: '快速冷卻', desc: '技能冷卻 -10%', name_en: 'Quick Recovery', desc_en: 'Skill cooldown -10%' },
+  { id: 'antiSlip', r: 'common', max: 3, name: '防滑鞋', desc: '衛生紙、黏液的減速效果 -25%', name_en: 'Grippy Socks', desc_en: 'Tissues and slime slow you 25% less' },
+  { id: 'headStart', r: 'common', max: 5, name: '好底子', desc: '每輪回歸時的起始長度 +4', name_en: 'Good Genes', desc_en: 'Start each round 4 longer' },
+  { id: 'thickSkin', r: 'common', max: 3, name: '厚臉皮', desc: '回歸後的無敵時間 +1 秒', name_en: 'Thick Skin', desc_en: '+1s invincible after each round' },
+  { id: 'wide', r: 'rare', max: 2, name: '廣角鏡', desc: '插入判定範圍 +10°（±45° 起）', name_en: 'Wide Angle', desc_en: 'Plug angle +10° (from ±45°)' },
+  { id: 'pocket', r: 'rare', max: 1, name: '雙口袋', desc: '道具欄多一格，可以同時拿 2 個道具', name_en: 'Two Pockets', desc_en: 'Hold 2 items at once' },
+  { id: 'loot', r: 'rare', max: 1, name: '順手牽羊', desc: '每次插入別人，立刻得到一個隨機道具', name_en: 'Pickpocket', desc_en: 'Get a random item each time you plug someone' },
+  { id: 'bluePill', r: 'rare', max: 2, name: '藍色體質', desc: '威爾鋼效果 +50%', name_en: 'Blue Blood', desc_en: 'Blue Pills work 50% better' },
+  { id: 'tissueTrail', r: 'rare', max: 1, name: '衛生紙尾跡', desc: '加速時每 3 秒在尾巴自動留下一張衛生紙', name_en: 'Tissue Trail', desc_en: 'Drop a tissue every 3s while boosting' },
+  { id: 'tight', r: 'rare', max: 2, name: '緊實', desc: '被插入時有 25% 機率自動把對方擠出去', name_en: 'Tight', desc_en: '25% chance to squeeze out anyone who plugs you' },
+  { id: 'autoCondom', r: 'rare', max: 1, name: '自動保險套', desc: '每 30 秒自動套上 2 秒保險套', name_en: 'Auto Condom', desc_en: 'A free 2s condom every 30s' },
+  { id: 'slippery', r: 'rare', max: 1, name: '滑溜身體', desc: '撞到別人的身體不會被推開，直接滑過去', name_en: 'Slippery', desc_en: 'Slide right through other bodies' },
+  { id: 'nineLives', r: 'legend', max: 2, name: '九命怪貓', desc: '被插入時復活一次，回到開局大小（最多同時 2 條命）', name_en: 'Nine Lives', desc_en: 'Revive once when plugged (hold up to 2)' },
+  { id: 'reverse', r: 'legend', max: 1, name: '反插', desc: '被從尾巴插入時，如果你比對方粗，改成你把對方吃掉', name_en: 'Reversal', desc_en: 'If you are thicker, whoever plugs you gets eaten instead' },
+  { id: 'bigOne', r: 'legend', max: 1, name: '巨根', desc: '每輪回歸時保留 25% 的長度', name_en: 'Big One', desc_en: 'Keep 25% of your length each round' },
+  { id: 'flood', r: 'legend', max: 1, name: '大洪水', desc: '回歸時甩出的液體留在地上 20 秒，變成大片減速區', name_en: 'Flood', desc_en: 'Your round-end splash stays 20s as a big slow zone' },
+  { id: 'omni', r: 'legend', max: 1, name: '萬能套', desc: '保險套期間撞到別人尾巴，不管角度都能直接插入', name_en: 'Universal Fit', desc_en: 'With a condom on, plug tails from any angle' },
+  { id: 'tightHole', r: 'curse', max: 1, name: '菊花緊縮', desc: '別人插入你的判定範圍縮小成 ±30°，但轉向速度 -20%', name_en: 'Clenched', desc_en: 'Others plug you only within ±30°, but turn 20% slower' },
+  { id: 'glass', r: 'curse', max: 1, name: '玻璃大砲', desc: '插入別人時獲得的長度 +50%，但保險套對你無效', name_en: 'Glass Cannon', desc_en: '+50% length from plugs, but condoms do nothing for you' },
+  { id: 'sprinter', r: 'curse', max: 1, name: '暴衝', desc: '移動速度一直 +15%，但轉向速度 -25%', name_en: 'Hothead', desc_en: 'Always 15% faster, but turn 25% slower' },
+  { id: 'premature', r: 'curse', max: 1, name: '早洩', desc: '加速不消耗長度，但每次插入後要噴 2.5 秒，幾乎停住', name_en: 'Premature', desc_en: 'Boost is free, but after each plug you stall 2.5s spurting' },
+];
+const mod = (s, k) => (s.mods && s.mods[k]) || 0; // how many of card k this snake holds
+const capOf = s => s.maxLen || CFG.MAX_LEN;
+const slowK = (s, f) => 1 - (1 - f) * (1 - 0.25 * mod(s, 'antiSlip'));
+const WHIP_T = 2.6; // round end: the tail whips and sprays while the snake shrinks back
 // skills a player can bring into a game (AI snakes always use boost)
 const SKILLS = {
   boost: { name: '加速', cd: 0,  name_en: 'Boost', desc_en: 'Hold to speed up.', desc: '按住加速。' },
@@ -517,7 +587,7 @@ const Sim = {
   snakes: [], food: [], events: [], merges: [], time: 0, nextId: 1,
 
   reset() {
-    this.snakes = []; this.food = []; this.events = []; this.merges = []; this.puddles = []; this.puddleSeq = 0; this.time = 0; this.noFood = false;
+    this.snakes = []; this.food = []; this.events = []; this.merges = []; this.puddles = []; this.puddleSeq = 0; this.time = 0; this.noFood = false; this.aggrBonus = 0;
     this.tissues = []; this.tissueSeq = 0;
     if (MAP.tissues) for (let i = 0; i < MAP.tissues.n; i++) this.spawnTissue();
     this.condom = MAP.condom ? { phase: 'wait', t: rnd(4, 15), seq: 0 } : null;
@@ -537,14 +607,14 @@ const Sim = {
     for (const w of this.orbWait) w.t -= dt;
     while (this.orbWait.length && this.orbWait[0].t <= 0) { this.orbWait.shift(); this.spawnOrb(); }
     for (const s of alive) {
-      if (s.item || s.merge || s.still) continue; // one item at a time
-      const rr = s.r + CFG.ITEM_R;
+      if ((s.item && (!mod(s, 'pocket') || s.item2)) || s.merge || s.still) continue; // one item at a time (two with 雙口袋)
+      const rr = s.r + CFG.ITEM_R * (1 + 0.3 * mod(s, 'magnet'));
       const i = this.orbs.findIndex(o => (s.x - o.x) ** 2 + (s.z - o.z) ** 2 < rr * rr);
       if (i < 0) continue;
       const o = this.orbs[i]; this.orbs.splice(i, 1);
       this.orbWait.push({ t: rnd(...CFG.ITEM_RESPAWN) }); this.orbWait.sort((a, b) => a.t - b.t);
-      s.item = ITEMS[(Math.random() * ITEMS.length) | 0]; s.aiItemT = rnd(1, 5);
-      this.events.push({ type: 'item', a: s.id, item: s.item, x: o.x, z: o.z });
+      const it = this.giveItem(s); s.aiItemT = rnd(1, 5);
+      this.events.push({ type: 'item', a: s.id, item: it, x: o.x, z: o.z });
     }
     for (const s of alive) { // computer snakes use what they hold after a moment (a condom right away if someone is behind them)
       if (!s.ai || !s.item) continue;
@@ -553,18 +623,62 @@ const Sim = {
       if (s.aiItemT <= 0 || threat) this.useItem(s);
     }
   },
+  giveItem(s) {
+    const pool = mod(s, 'glass') ? ITEMS.filter(i => i !== 'condom') : ITEMS, it = pool[(Math.random() * pool.length) | 0];
+    if (!s.item) s.item = it; else s.item2 = it;
+    return it;
+  },
+  dropTissue(s) { // left on the floor just behind the tail; it slows whoever else touches it
+    const g = s.r + 1.6; let x = s.tx + s.tdx * g, z = s.tz + s.tdz * g;
+    if (!mapFree(x, z, 0.8)) { x = s.tx; z = s.tz; }
+    this.tissues.push({ id: ++this.tissueSeq, x, z, alive: true, t: 0, rot: rnd(0, 6.28), owner: s.id, dropped: true, life: CFG.DROP_TISSUE_LIFE });
+  },
+  // 無限模式 round end: the snake shrinks back to keepLen while its tail whips side to side and sprays
+  startRebirth(s, keepLen) {
+    s.whipT = WHIP_T; s.whipAcc = 0; s.boost = false;
+    s.lenTarget = keepLen; s.rTarget = CFG.START_R;
+    s.invuln = Math.max(s.invuln, WHIP_T + 2 + mod(s, 'thickSkin'));
+  },
+  stepWhip(s, dt) {
+    s.whipT = Math.max(0, s.whipT - dt);
+    if (s.whipT < WHIP_T - 1.1) s.len += (s.lenTarget - s.len) * Math.min(1, dt * 3.5); // whips first, then shrinks
+    if (s.whipT <= 0) s.len = s.lenTarget;
+    s.whipAcc += dt;
+    const fl = mod(s, 'flood');
+    while (s.whipAcc >= 0.07) {
+      s.whipAcc -= 0.07;
+      const px = -s.tdz, pz = s.tdx, sw = Math.sin(this.time * 14) * (s.r * 2 + 2.5), bk = s.r + rnd(1, 3.5);
+      const x = s.tx + s.tdx * bk + px * sw, z = s.tz + s.tdz * bk + pz * sw;
+      if (!inShower(x, z)) this.puddles.push({ id: ++this.puddleSeq, owner: s.id, x, z, r: (s.r * 1.1 + 1.1) * (fl ? 1.5 : 1) * rnd(0.8, 1.2), t: 0, life: fl ? 20 : CFG.PUDDLE_T, color: '#f3efe4' });
+    }
+  },
+  revive(s) { // 九命怪貓: back to the start size somewhere else
+    const p = this.spawnPoint(), dir = Math.atan2(-p.z, -p.x);
+    s.x = p.x; s.z = p.z; s.dir = s.target = dir; s.merge = null; s.whipT = 0;
+    s.len = s.lenTarget = CFG.START_LEN + 4 * mod(s, 'headStart'); s.r = s.rTarget = CFG.START_R;
+    s.trail = []; for (let i = 1; i <= s.len / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
+    s.invuln = 3 + mod(s, 'thickSkin'); s.bubbleT = 0; s.spitT = 0;
+    this.buildBody(s);
+  },
+  // 反插: the would-be biter L is eaten on the spot by W
+  devour(W, L) {
+    if (L.merge) { const o = L.merge.a === L ? L.merge.b : L.merge.a; o.merge = null; this.merges = this.merges.filter(x => x !== L.merge); L.merge = null; }
+    W.lenTarget = Math.min(capOf(W), W.lenTarget + L.len * (1 + 0.15 * mod(W, 'appetite') + (mod(W, 'glass') ? 0.5 : 0)));
+    W.rTarget = Math.min(CFG.MAX_R, W.rTarget + 0.12 + (L.r - CFG.START_R) * 0.35);
+    W.absorbed += 1 + L.absorbed; W.pulse = 1;
+    L.alive = false; L.killedBy = W.id;
+    this.events.push({ type: 'merged', rev: true, a: W.id, b: L.id, x: L.x, z: L.z, dir: L.dir, r: L.r, ar: L.r, len: L.len, color: L.color });
+  },
   useItem(s) {
     const it = s.item; if (!it || !s.alive || (s.merge && s.merge.a === s)) return;
-    if (it === 'condom') { if (s.bubbleT > 0) return; s.bubbleT = CFG.BUBBLE_T; s.bubbleLen = s.lenTarget; s.bubbleCov = 0; this.events.push({ type: 'bubble', a: s.id }); }
-    else if (it === 'tissue') { // left on the floor just behind the tail; it slows whoever else touches it
-      const g = s.r + 1.6; let x = s.tx + s.tdx * g, z = s.tz + s.tdz * g;
-      if (!mapFree(x, z, 0.8)) { x = s.tx; z = s.tz; }
-      this.tissues.push({ id: ++this.tissueSeq, x, z, alive: true, t: 0, rot: rnd(0, 6.28), owner: s.id, dropped: true, life: CFG.DROP_TISSUE_LIFE });
+    if (it === 'condom') { if (s.bubbleT > 0) return; s.bubbleT = CFG.BUBBLE_T + 1.5 * mod(s, 'condomPlus'); s.bubbleLen = s.lenTarget; s.bubbleCov = 0; this.events.push({ type: 'bubble', a: s.id }); }
+    else if (it === 'tissue') {
+      this.dropTissue(s);
       this.events.push({ type: 'useItem', a: s.id, item: it });
     }
-    else if (it === 'lube') { s.lubeT = CFG.LUBE_T; this.events.push({ type: 'useItem', a: s.id, item: it }); }
-    else if (it === 'pill') { s.lenTarget = Math.min(CFG.MAX_LEN, s.lenTarget + CFG.PILL_LEN); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.PILL_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
-    s.item = null;
+    else if (it === 'lube') { s.lubeT = CFG.LUBE_T + mod(s, 'lubePlus'); this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    else if (it === 'pill') { s.lenTarget = Math.min(capOf(s), s.lenTarget + CFG.PILL_LEN * (1 + 0.5 * mod(s, 'bluePill'))); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.PILL_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    s.item = s.item2 || null; s.item2 = null;
   },
   makeFood(x, z, v) {
     if (x === undefined) { const p = randomFree(1.2); x = p.x; z = p.z; }
@@ -587,14 +701,14 @@ const Sim = {
       x: p.x, z: p.z, dir, target: dir, len: CFG.START_LEN, lenTarget: CFG.START_LEN,
       r: CFG.START_R, rTarget: CFG.START_R, trail: [], body: [], alive: true, invuln: 2.5,
       boost: false, absorbed: 0, pulse: 0, dropT: 0,
-      ai: isPlayer ? null : { t: 0, aggr: rnd(0.35, 1), wander: dir, goal: null },
+      ai: isPlayer ? null : { t: 0, aggr: Math.min(1, rnd(0.35, 1) + (this.aggrBonus || 0)), wander: dir, goal: null },
     };
     for (let i = 1; i <= s.len / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
     this.buildBody(s);
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? CFG.PUDDLE_SLOW : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? CFG.TISSUE_SLOW : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
@@ -690,6 +804,16 @@ const Sim = {
       let rem = s.len - acc, last = a;
       while (rem > 1e-4) { const st = Math.min(S, rem); last = { x: last.x + dx * st, z: last.z + dz * st }; b.push(last); s.trail.push(last); rem -= st; }
     }
+    if (s.whipT > 0 && b.length > 6) { // round end: the back half whips side to side (copies, so the trail stays put)
+      const n = b.length, i0 = Math.floor(n * 0.45), amp = Math.min(3, s.r * 1.6 + 1) * Math.min(1, s.whipT / 0.4, (WHIP_T - s.whipT) / 0.3);
+      const sw = Math.sin(this.time * 14);
+      for (let i = i0; i < n; i++) {
+        const a = b[Math.max(0, i - 1)], c = b[Math.min(n - 1, i + 1)];
+        let dx = c.x - a.x, dz = c.z - a.z; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+        const w = Math.pow((i - i0) / (n - 1 - i0 || 1), 1.6) * amp * sw;
+        b[i] = { x: b[i].x - dz * w, z: b[i].z + dx * w };
+      }
+    }
     s.body = b;
     const n = b.length, t = b[n - 1], ref = b[Math.max(0, n - 3)];
     let dx = t.x - ref.x, dz = t.z - ref.z; const l = Math.hypot(dx, dz) || 1;
@@ -739,6 +863,7 @@ const Sim = {
     } else if (c.phase === 'used') { const o = this.snakes.find(q => q.id === c.owner); if (!o || !o.alive || !(o.bubbleT > 0)) Object.assign(c, { phase: 'wait', t: rnd(...CFG.CONDOM_WAIT) }); }
   },
   stepBubble(s, dt) {
+    if (mod(s, 'autoCondom') && !mod(s, 'glass') && (s.acT = (s.acT || 0) + dt) >= 30 && !(s.bubbleT > 0)) { s.acT = 0; s.bubbleT = 2; s.bubbleLen = s.lenTarget; s.bubbleCov = 0; this.events.push({ type: 'bubble', a: s.id }); }
     if (s.tissueT > 0) s.tissueT = Math.max(0, s.tissueT - dt);
     if (s.lubeT > 0) s.lubeT = Math.max(0, s.lubeT - dt);
     if (!(s.bubbleT > 0)) return;
@@ -751,7 +876,7 @@ const Sim = {
   step(dt, inputs) {
     this.time += dt;
     for (const p of this.puddles) p.t += dt;
-    while (this.puddles.length && this.puddles[0].t > CFG.PUDDLE_T) this.puddles.shift();
+    if (this.puddles.some(p => p.t > (p.life || CFG.PUDDLE_T))) this.puddles = this.puddles.filter(p => p.t <= (p.life || CFG.PUDDLE_T));
     const alive = this.snakes.filter(s => s.alive);
     for (const s of alive) {
       const m = s.merge;
@@ -768,7 +893,7 @@ const Sim = {
       if (m) s.boost = false;
       if (s.ejectT > 0) s.ejectT = Math.max(0, s.ejectT - dt);
       if (s.invuln > 0) s.invuln -= dt;
-      if (s.cd > 0) s.cd = Math.max(0, s.cd - dt);
+      if (s.cd > 0) s.cd = Math.max(0, s.cd - dt / (1 - 0.1 * mod(s, 'quickCd')));
       if (s.guardT > 0) s.guardT = Math.max(0, s.guardT - dt);
       this.stepBubble(s, dt);
       if (s.swapT > 0) { const was = s.swapT; s.swapT = Math.max(0, s.swapT - dt); if (was > CFG.SWAP_T / 2 && s.swapT <= CFG.SWAP_T / 2) this.swapEnds(s); }
@@ -779,7 +904,7 @@ const Sim = {
       if (s.still && !m) continue; // tutorial dummy: doesn't move until it gets absorbed
       if (s.ouroT > 0) { this.stepOuro(s, dt); continue; } // biting its own tail: holds still
       s.pulse = Math.max(0, s.pulse - dt * 1.6);
-      const turn = CFG.TURN / (1 + (s.r - CFG.START_R) * 0.35);
+      const turn = CFG.TURN / (1 + (s.r - CFG.START_R) * 0.35) * (1 + 0.1 * mod(s, 'agile')) * (mod(s, 'tightHole') ? 0.8 : 1) * (mod(s, 'sprinter') ? 0.75 : 1);
       const diff = wrapA(s.target - s.dir);
       s.dir = wrapA(s.dir + Math.max(-turn * dt, Math.min(turn * dt, diff)));
       const sp = this.speedOf(s);
@@ -788,13 +913,15 @@ const Sim = {
       mapPush(s, s.r * 1.3);
       // boosting costs length
       if (s.boost) {
-        s.lenTarget -= dt * CFG.BOOST_LEN;
+        s.lenTarget -= dt * (mod(s, 'premature') ? 0 : CFG.BOOST_LEN * (1 - 0.15 * mod(s, 'stamina')));
+        if (mod(s, 'tissueTrail') && (s.ttT = (s.ttT || 0) + dt) >= 3) { s.ttT = 0; this.dropTissue(s); }
         s.rTarget = Math.max(CFG.START_R, s.rTarget - dt * CFG.BOOST_THIN); // and slowly thinner
       }
       // grow / shrink smoothly (never faster than the head moves, so the tail never needs history we dropped)
-      s.lenTarget = Math.min(CFG.MAX_LEN, Math.max(CFG.START_LEN, s.lenTarget));
+      s.lenTarget = Math.min(capOf(s), Math.max(CFG.START_LEN, s.lenTarget));
       const gr = Math.min(8, sp * 0.8) * dt;
-      s.len += Math.max(-gr * 3, Math.min(gr, s.lenTarget - s.len));
+      if (s.whipT > 0) this.stepWhip(s, dt);
+      else s.len += Math.max(-gr * 3, Math.min(gr, s.lenTarget - s.len));
       s.r += (s.rTarget - s.r) * Math.min(1, dt * 3);
       // record trail
       const h = s.trail[0];
@@ -824,14 +951,24 @@ const Sim = {
           const cosAng = dist > 1e-6 ? (dx * B.tdx + dz * B.tdz) / dist : 1;
           const approaching = -(fx * B.tdx + fz * B.tdz) > 0.2; // head is moving into the tail
           const busy = A.ejectT > 0 || A.swapT > 0 || B.swapT > 0 || B.guardT > 0 || A.ouroT > 0 || B.ouroT > 0; // mid swap, tail clenched shut, or tail already plugged by its own head
-          if (cosAng >= COS_CONE && approaching && B.bubbleT > 0) { // wrapped in a bubble: the biter bounces off
+          const half = CFG.CONE + 0.1745 * mod(A, 'wide') - (mod(B, 'tightHole') ? 0.2618 : 0);
+          const inCone = (A.bubbleT > 0 && mod(A, 'omni')) || cosAng >= (half === CFG.CONE ? COS_CONE : Math.cos(half));
+          if (inCone && approaching && B.bubbleT > 0) { // wrapped in a bubble: the biter bounces off
             const k = reach - dist + 0.8; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k;
             if (!A.bounceT || this.time - A.bounceT > 0.4) { A.bounceT = this.time; this.events.push({ type: 'bounce', a: A.id, b: B.id, x: B.tx, z: B.tz }); }
             continue;
           }
-          if (cosAng >= COS_CONE && approaching && !busy && B.invuln <= 0 && !B.merge) { this.absorb(A, B); continue; }
+          if (inCone && approaching && !busy && B.invuln <= 0 && !B.merge) {
+            if (mod(B, 'reverse') && B.r > A.r) { this.devour(B, A); break; } // 反插
+            if (mod(B, 'tight') && Math.random() < 0.25 * mod(B, 'tight')) { // 緊實: squeezed out before it gets in
+              const k = reach - dist + 1.2; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k; A.ejectT = 1.2;
+              this.events.push({ type: 'squeeze', a: B.id, b: A.id, x: B.tx, z: B.tz }); continue;
+            }
+            this.absorb(A, B); continue;
+          }
         }
         // 2) any other contact: soft push-out (head vs B's whole body, incl. head)
+        if (mod(A, 'slippery')) continue; // 滑溜身體: slides right through
         const bb = B.body, rb = B.r * 0.95;
         for (let i = 0; i < bb.length; i++) {
           const p = bb[i], ex = A.x - p.x, ez = A.z - p.z, rr = A.r * 1.3 + rb;
@@ -896,10 +1033,17 @@ const Sim = {
     this.buildBody(B); this.buildBody(A);
     A.trail = B.body.slice(1).concat(A.body);
     A.x = B.x; A.z = B.z; A.dir = B.dir;
-    A.len = A.lenTarget = Math.min(CFG.MAX_LEN, A.len + B.len);
+    A.len = A.lenTarget = Math.min(capOf(A), A.len + B.len * (1 + 0.15 * mod(A, 'appetite') + (mod(A, 'glass') ? 0.5 : 0)));
     A.rTarget = Math.min(CFG.MAX_R, A.rTarget + 0.12 + (B.r - CFG.START_R) * 0.35);
-    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = 0.9;
+    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = mod(A, 'premature') ? 2.5 : 0.9;
     A.merge = B.merge = null; this.merges = this.merges.filter(x => x !== m);
+    if (mod(A, 'loot') && (!A.item || (mod(A, 'pocket') && !A.item2))) { const it = this.giveItem(A); this.events.push({ type: 'item', a: A.id, item: it, x: A.x, z: A.z }); }
+    if (B.mods && B.mods.lives > 0) { // 九命怪貓: the plugged snake comes back at the start size
+      B.mods.lives--;
+      this.buildBody(A);
+      this.events.push({ type: 'revive', a: A.id, b: B.id, x: B.x, z: B.z, dir: B.dir, r: B.r, ar: A.rTarget, len: B.len, color: B.color });
+      this.revive(B); return;
+    }
     B.alive = false; B.killedBy = A.id;
     this.buildBody(A);
     this.events.push({ type: 'merged', a: A.id, b: B.id, x: B.x, z: B.z, dir: B.dir, r: B.r, ar: A.rTarget, len: B.len, color: B.color });
@@ -1878,7 +2022,7 @@ function updateSkillBtn() {
 
 // ---- menus: start / skin / skill (choices remembered on this device) ----
 const SKINS = ['#ff5a7a', ...COLORS];
-const MODES = ['classic', 'br']; // 經典 / 吃雞 (last snake standing, no respawns)
+const MODES = ['classic', 'br', 'endless']; // 經典 / 吃雞 (last snake standing, no respawns)
 const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: CFG.BR_N });
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
 try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
@@ -1940,7 +2084,7 @@ document.getElementById('setBtn').addEventListener('click', () => showOv('set'))
 /* =====================================================================
    GAME LOOP
    ===================================================================== */
-let me = null, running = false, camFollow = null, gen = 0, br = false, brN = 0;
+let me = null, running = false, camFollow = null, gen = 0, br = false, brN = 0, endless = false, cardPause = false, round = 0, pity = 0;
 const camPos = new THREE.Vector3(0, 40, 30), camLook = new THREE.Vector3();
 const toastEl = document.getElementById('toast'); let toastT = 0;
 function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); toastT = 1.4; }
@@ -1955,6 +2099,8 @@ function newGame() {
   Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern;
   me = Sim.addSnake(true);
   br = settings.mode === 'br'; brN = br ? CFG.BR_N : 0;
+  endless = settings.mode === 'endless'; cardPause = false; round = 0; pity = 0; document.getElementById('cardOv').hidden = true;
+  if (endless) { me.mods = {}; me.maxLen = endlessGoal(); }
   for (let i = 0; i < (br ? CFG.BR_N - 1 : CFG.AI); i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   camFollow = me; running = true;
   document.getElementById('overOv').hidden = true;
@@ -2093,7 +2239,7 @@ function updatePuddles() {
     const grow = Math.min(1, Math.max(0, (p.t - 0.3) / 0.25)), g = grow * (2 - grow); // appears when the jet lands
     const sc = Math.max(1e-3, p.r * g * (1 + Math.min(0.15, p.t * 0.04)));
     pv.m.scale.set(sc * pv.sx, 1, sc);
-    pv.m.material.opacity = 0.88 * Math.min(1, Math.max(0, (CFG.PUDDLE_T - p.t) / 0.8));
+    pv.m.material.opacity = 0.88 * Math.min(1, Math.max(0, ((p.life || CFG.PUDDLE_T) - p.t) / 0.8));
   }
   for (const [id, pv] of puddleViews) if (pv.f !== puddleFrame) { scene.remove(pv.m); pv.m.material.dispose(); puddleViews.delete(id); }
 }
@@ -2203,15 +2349,18 @@ function handleEvents() {
     if (ev.type === 'pop') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffe6ee'); if (A === me) toast(T('toast.pop')); continue; }
     if (ev.type === 'bounce') { if (A === me) toast(T('toast.bounceOther', { name: nameOf(B) })); if (B === me) toast(T('toast.bounceMe')); continue; }
     if (ev.type === 'skill') { if (A === me) toast({ swap: T('toast.swap'), guard: T('toast.guard'), ouro: T('toast.ouro') }[ev.skill]); continue; }
+    if (ev.type === 'revive') { dropView(ev.b); spawnJelly(ev); if (B === me) toast(T('toast.revive')); continue; }
+    if (ev.type === 'squeeze') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(T('toast.squeeze', { name: nameOf(B) })); continue; }
     if (ev.type !== 'merged') continue;
     dropView(ev.b); spawnJelly(ev);
-    if (A === me) toast(T('toast.plugged', { name: nameOf(B) }));
+    if (A === me) toast(T(ev.rev ? 'toast.reverse' : 'toast.plugged', { name: nameOf(B) }));
     if (tut) { tutMerged(A, B); continue; }
     if (B === me) {
       running = false; camFollow = A;
       document.getElementById('overTitle').textContent = T('over.by', { name: nameOf(A) });
       document.getElementById('overStats').textContent = T('over.stats', { len: me.bestLen.toFixed(1), n: me.absorbed })
-        + (br ? '\n' + T('over.rank', { rank: Sim.snakes.filter(s => s.alive).length + 1, n: brN }) : '');
+        + (br ? '\n' + T('over.rank', { rank: Sim.snakes.filter(s => s.alive).length + 1, n: brN }) : '')
+        + (endless ? '\n' + T('over.endless', { n: round, cards: cardList() }) : '');
       setTimeout(() => { document.getElementById('overOv').hidden = false; }, 900);
     }
     const g0 = gen;
@@ -2261,13 +2410,59 @@ function updateArrows() {
   for (let i = used; i < arrowPool.length; i++) arrowPool[i].style.display = 'none';
 }
 
+// ---- 無限模式: reach the goal length, pick 1 of 3 cards, whip back to the start size, repeat ----
+const endlessGoal = () => Math.min(400, 50 + 10 * round + 2.5 * round * (round - 1)); // 50, 60, 75, 95, 120 … (the step grows by 5 each round)
+const cardOf = id => CARDS.find(c => c.id === id);
+function cardAvail(c) { return c.id === 'nineLives' ? (me.mods.lives || 0) < c.max : mod(me, c.id) < c.max; }
+function drawCards() {
+  const hand = [], pool = CARDS.filter(cardAvail);
+  const pickR = force => { if (force) return Math.random() < 5 / 30 ? 'legend' : 'rare'; let x = Math.random() * 100; for (const r in CARD_W) { if ((x -= CARD_W[r]) < 0) return r; } return 'common'; };
+  for (let i = 0; i < 3 && hand.length < pool.length; i++) {
+    const r = pickR(i === 0 && pity >= 3);
+    let opts = pool.filter(c => c.r === r && !hand.includes(c));
+    if (!opts.length) opts = pool.filter(c => !hand.includes(c));
+    hand.push(opts[(Math.random() * opts.length) | 0]);
+  }
+  pity = hand.some(c => c.r === 'rare' || c.r === 'legend') ? 0 : pity + 1;
+  return hand.sort(() => Math.random() - 0.5);
+}
+function openCards() {
+  cardPause = true; boostHeld = false;
+  const row = document.getElementById('cardRow'); row.innerHTML = '';
+  document.getElementById('cardSub').textContent = T('cards.sub', { len: me.maxLen });
+  for (const c of drawCards()) {
+    const have = c.id === 'nineLives' ? (me.mods.lives || 0) : mod(me, c.id);
+    const b = document.createElement('button'); b.className = 'gcard ' + c.r;
+    b.innerHTML = `<span class="rar">${T('rarity.' + c.r)}</span><b>${L(c, 'name')}</b><p>${L(c, 'desc')}</p><span class="stk">${c.max > 1 ? T('card.stack', { n: have, max: c.max }) : T('card.noStack')}</span>`;
+    b.addEventListener('click', () => pickCard(c));
+    row.appendChild(b);
+  }
+  document.getElementById('cardOv').hidden = false;
+}
+function pickCard(c) {
+  if (!cardPause) return;
+  me.mods[c.id] = (me.mods[c.id] || 0) + 1;
+  if (c.id === 'nineLives') me.mods.lives = (me.mods.lives || 0) + 1;
+  round++;
+  const keep = Math.max(CFG.START_LEN + 4 * mod(me, 'headStart'), mod(me, 'bigOne') ? me.len * 0.25 : 0);
+  me.maxLen = endlessGoal();
+  Sim.startRebirth(me, Math.min(keep, me.maxLen - 10));
+  Sim.aggrBonus = Math.min(0.5, 0.1 * round); for (const s of Sim.snakes) if (s.ai) s.ai.aggr = Math.min(1, s.ai.aggr + 0.1);
+  document.getElementById('cardOv').hidden = true; cardPause = false;
+  toast(T('toast.card', { name: L(c, 'name') }));
+}
+function cardList() {
+  const ids = Object.keys(me && me.mods || {}).filter(k => cardOf(k));
+  return ids.length ? ids.map(k => L(cardOf(k), 'name') + (me.mods[k] > 1 ? '×' + me.mods[k] : '')).join('、') : T('card.none');
+}
+
 function updateHud() {
   if (me) {
     me.bestLen = Math.max(me.bestLen || 0, me.len);
     sLen.textContent = me.len.toFixed(1);
     sMore.textContent = T('hud.more', { r: me.r.toFixed(2), n: me.absorbed });
   }
-  document.getElementById('aliveN').textContent = br && me ? T('hud.alive', { n: Sim.snakes.filter(s => s.alive).length }) : '';
+  document.getElementById('aliveN').textContent = br && me ? T('hud.alive', { n: Sim.snakes.filter(s => s.alive).length }) : endless && me ? T('hud.round', { n: round + 1, len: me.maxLen }) : '';
   const top = Sim.snakes.filter(s => s.alive).sort((a, b) => b.len - a.len).slice(0, 5);
   boardRows.innerHTML = top.map(s => `<div class="row${s.isPlayer ? ' me' : ''}"><span class="dot" style="background:${s.color}"></span><span>${nameOf(s)}</span><span>${s.len.toFixed(0)}</span></div>`).join('');
 }
@@ -2295,13 +2490,16 @@ function frame(now) {
   }
   if (tut) tutInputs();
   acc += dt;
+  if (cardPause) acc = 0;
   while (acc >= STEP) { Sim.step(STEP, inputs); acc -= STEP; handleEvents(); }
+  if (endless && running && me && me.alive && !cardPause && !(me.whipT > 0) && !me.merge && me.len >= me.maxLen - 0.05) openCards();
   const t = Sim.time;
   for (const s of Sim.snakes) {
     if (!s.alive) continue;
     const v = views.get(s.id) || makeView(s);
     updateView(s, v, t, me);
     if (s.boost && !s.merge) pourTail(s, dt);
+    if (s.whipT > 0) pourTail(s, dt * 3);
     if (s.spraying) sprayJet(s, dt);
   }
   updateTraps(dt);
@@ -2424,10 +2622,11 @@ function updateOrbs(dt) {
 }
 const itemBtn = document.getElementById('itemBtn'), itemImg = document.getElementById('itemImg');
 let itemShown = null;
+let itemTwo = false;
 function updateItemBtn() {
-  const it = me && me.alive ? me.item || null : null;
-  if (it === itemShown) return;
-  itemShown = it; itemBtn.disabled = !it; itemBtn.classList.toggle('full', !!it); itemImg.hidden = !it;
+  const it = me && me.alive ? me.item || null : null, two = !!(me && me.alive && me.item2);
+  if (it === itemShown && two === itemTwo) return;
+  itemShown = it; itemTwo = two; itemBtn.classList.toggle('two', two); itemBtn.disabled = !it; itemBtn.classList.toggle('full', !!it); itemImg.hidden = !it;
   if (it) { itemImg.src = ITEM_ICONS[it]; itemBtn.setAttribute('aria-label', T('item.' + it)); } else itemBtn.setAttribute('aria-label', T('item.empty'));
 }
 itemBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (me && me.alive && me.item) itemTap = true; });
@@ -2567,7 +2766,7 @@ function tutShow(n, title, text, extra) {
   tutBox.hidden = false;
 }
 function startTutorial() {
-  br = false;
+  br = false; endless = false; cardPause = false; document.getElementById('cardOv').hidden = true;
   gen++;
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
@@ -2650,7 +2849,7 @@ document.getElementById('tutBtn').addEventListener('click', startTutorial);
 
 // attract mode behind the start card: AI-only arena
 function startAttract() {
-  br = false;
+  br = false; endless = false; cardPause = false; document.getElementById('cardOv').hidden = true;
   gen++;
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
