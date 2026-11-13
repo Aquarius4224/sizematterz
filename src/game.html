@@ -258,6 +258,9 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <div class="swatches" id="swatches"></div>
     <h3 data-i18n="skin.pattern">花紋</h3>
     <div class="pats" id="pats"></div>
+    <h3 data-i18n="skin.special">特殊造型</h3>
+    <p class="hint" data-i18n="skin.specialHelp">每種都有天生的特性，可以和上面的顏色、花紋一起用。</p>
+    <div class="opts" id="specOpts"></div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
 </div>
@@ -341,7 +344,7 @@ const I18N = {
     'menu.start': 'START', 'menu.skin': 'SKIN', 'menu.skinSub': '造型', 'menu.skill': 'SKILL', 'menu.skillSub': '技能 · {name}', 'menu.map': 'MAP', 'menu.mapSub': '地圖 · {name}',
     'menu.tut': '再看一次教學', 'menu.hint': '拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能插入整條蛇。',
     'music.on': '🔊 音樂開', 'music.off': '🔇 音樂關', 'menu.credit': '音樂：“Bit Shift” Kevin MacLeod (incompetech.com) · CC BY 4.0', 'menu.lang': '🌐 語言：中文',
-    'skin.title': '選擇造型', 'skin.basic': '基本顏色', 'skin.pattern': '花紋', 'back': '‹ 返回', 'aria.color': '顏色 {c}',
+    'skin.title': '選擇造型', 'skin.special': '特殊造型', 'skin.specialHelp': '每種都有天生的特性，可以和上面的顏色、花紋一起用。', 'spec.none': '無', 'spec.noneDesc': '一般的身體，沒有特性。', 'skin.basic': '基本顏色', 'skin.pattern': '花紋', 'back': '‹ 返回', 'aria.color': '顏色 {c}',
     'skill.title': '選擇技能', 'skill.help': '選一個帶進遊戲，用右下角的技能鍵發動。', 'skill.auto': '自動 · ', 'skill.cd': '冷卻 {n} 秒', 'skill.hold': '按住使用',
     'map.title': '選擇地圖',
     'menu.mode': 'MODE', 'menu.modeSub': '模式 · {name}', 'mode.title': '選擇模式', 'hud.alive': ' · 剩 {n} 條',
@@ -377,7 +380,7 @@ const I18N = {
     'menu.start': 'START', 'menu.skin': 'SKIN', 'menu.skinSub': '', 'menu.skill': 'SKILL', 'menu.skillSub': '{name}', 'menu.map': 'MAP', 'menu.mapSub': '{name}',
     'menu.tut': 'Replay tutorial', 'menu.hint': 'Drag the screen to steer. Ram into another snake’s tail from behind (within ±45°) to plug the whole snake.',
     'music.on': '🔊 Music on', 'music.off': '🔇 Music off', 'menu.credit': 'Music: “Bit Shift” Kevin MacLeod (incompetech.com) · CC BY 4.0', 'menu.lang': '🌐 Language: English',
-    'skin.title': 'Choose a skin', 'skin.basic': 'Colours', 'skin.pattern': 'Patterns', 'back': '‹ Back', 'aria.color': 'Colour {c}',
+    'skin.title': 'Choose a skin', 'skin.special': 'Special bodies', 'skin.specialHelp': 'Each has a built-in trait. Works with any colour or pattern above.', 'spec.none': 'None', 'spec.noneDesc': 'A normal body with no trait.', 'skin.basic': 'Colours', 'skin.pattern': 'Patterns', 'back': '‹ Back', 'aria.color': 'Colour {c}',
     'skill.title': 'Choose a skill', 'skill.help': 'Pick one to bring into the game. Use it with the skill button at the bottom right.', 'skill.auto': 'Auto · ', 'skill.cd': 'Cooldown {n}s', 'skill.hold': 'Hold to use',
     'map.title': 'Choose a map',
     'menu.mode': 'MODE', 'menu.modeSub': '{name}', 'mode.title': 'Choose a mode', 'hud.alive': ' · {n} left',
@@ -476,7 +479,23 @@ const CARDS = [
   { id: 'premature', r: 'curse', max: 1, name: '早洩', desc: '加速不消耗長度，但每次插入後要噴 2.5 秒，幾乎停住', name_en: 'Premature', desc_en: 'Boost is free, but after each plug you stall 2.5s spurting' },
 ];
 const mod = (s, k) => (s.mods && s.mods[k]) || 0; // how many of card k this snake holds
-const capOf = s => s.maxLen || CFG.MAX_LEN;
+// special skins: each one has a built-in trait (player only for now). Looks are placeholders until Chiu picks colours.
+const SPECIALS = {
+  grower: { name: 'Grower', name_en: 'Grower', desc: '平常長度只有同分的一半、粗細 2/3；加速時或吃下威爾鋼後 10 秒內會明顯變長變粗。', desc_en: 'Normally half as long and 2/3 as thick as others with the same score; swells up while boosting or for 10s after a Blue Pill.' },
+  shower: { name: 'Shower', name_en: 'Shower', desc: '開場 14 分，身體是同分的 1.5 倍長、1.25 倍粗；但插入別人只拿到 0.8 倍分數。', desc_en: 'Starts at 14 and is 1.5× as long and 1.25× as thick as others with the same score, but gets only 0.8× from plugs.' },
+  chode: { name: 'Chode', name_en: 'Chode', desc: '又短又粗（0.6 倍長、1.4 倍粗），變粗也不會轉得比較慢；但長度上限 40。', desc_en: 'Short and thick (0.6× length, 1.4× girth) and turns fast at any girth, but tops out at 40.' },
+  hammerhead: { name: 'Hammerhead', name_en: 'Hammerhead', desc: '頭比身體粗 2 倍，插入判定角度 ±60°；但比較容易被身體和家具卡住。', desc_en: 'Head twice as thick as the body and a ±60° plug angle, but snags on bodies and furniture more.' },
+  turtle: { name: 'Turtleneck', name_en: 'Turtleneck', desc: '頭前有一圈包皮，被插入時 10% 機率把對方擠出去；但插入別人比較慢，插完要等包皮包回頭上才能動。', desc_en: 'A foreskin ring on the head: 10% chance to squeeze out anyone who plugs you, but you plug slower and must wait for it to roll back over afterwards.' },
+  banana: { name: 'Banana', name_en: 'Banana', desc: '身體天生往右彎，往右轉特別快（×1.4），往左轉比較慢（×0.7）。', desc_en: 'Body curves to the right: turns right 1.4× faster, left 0.7× slower.' },
+};
+const SPECIAL_IDS = Object.keys(SPECIALS);
+const lkOf = s => s.special === 'grower' ? 0.5 + 0.5 * (s.growK || 0) : s.special === 'shower' ? 1.5 : s.special === 'chode' ? 0.6 : 1; // drawn length ÷ score
+const rkOf = s => s.special === 'grower' ? 0.667 + 0.633 * (s.growK || 0) : s.special === 'shower' ? 1.25 : s.special === 'chode' ? 1.4 : 1; // drawn girth ÷ normal
+const headK = s => s.special === 'hammerhead' ? 2 : 1;
+const startLenOf = s => s.special === 'shower' ? 14 : CFG.START_LEN;
+const plugGain = A => 1 + 0.15 * mod(A, 'appetite') + (mod(A, 'glass') ? 0.5 : 0) - (A.special === 'shower' ? 0.2 : 0);
+const BL = s => s.bl || s.len; // drawn body length
+const capOf = s => Math.min(s.special === 'chode' ? 40 : 1e9, s.maxLen || CFG.MAX_LEN);
 const slowK = (s, f) => 1 - (1 - f) * (1 - 0.25 * mod(s, 'antiSlip'));
 const WHIP_T = 2.6; // round end: the tail whips and sprays while the snake shrinks back
 // skills a player can bring into a game (AI snakes always use boost)
@@ -678,15 +697,15 @@ const Sim = {
   revive(s) { // 九命怪貓: back to the start size somewhere else
     const p = this.spawnPoint(), dir = Math.atan2(-p.z, -p.x);
     s.x = p.x; s.z = p.z; s.dir = s.target = dir; s.merge = null; s.whipT = 0;
-    s.len = s.lenTarget = CFG.START_LEN + 4 * mod(s, 'headStart'); s.r = s.rTarget = CFG.START_R;
-    s.trail = []; for (let i = 1; i <= s.len / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
+    s.len = s.lenTarget = startLenOf(s) + 4 * mod(s, 'headStart'); s.rTarget = CFG.START_R; s.r = s.rTarget * rkOf(s);
+    s.trail = []; for (let i = 1; i <= s.len * 1.5 / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
     s.invuln = 3 + mod(s, 'thickSkin'); s.bubbleT = 0; s.spitT = 0;
     this.buildBody(s);
   },
   // 反插: the would-be biter L is eaten on the spot by W
   devour(W, L) {
     if (L.merge) { const o = L.merge.a === L ? L.merge.b : L.merge.a; o.merge = null; this.merges = this.merges.filter(x => x !== L.merge); L.merge = null; }
-    W.lenTarget = Math.min(capOf(W), W.lenTarget + L.len * (1 + 0.15 * mod(W, 'appetite') + (mod(W, 'glass') ? 0.5 : 0)));
+    W.lenTarget = Math.min(capOf(W), W.lenTarget + L.len * plugGain(W));
     W.rTarget = Math.min(CFG.MAX_R, W.rTarget + 0.12 + (L.r - CFG.START_R) * 0.35);
     W.absorbed += 1 + L.absorbed; W.pulse = 1;
     L.alive = false; L.killedBy = W.id;
@@ -700,7 +719,7 @@ const Sim = {
       this.events.push({ type: 'useItem', a: s.id, item: it });
     }
     else if (it === 'lube') { s.lubeT = CFG.LUBE_T + mod(s, 'lubePlus'); this.events.push({ type: 'useItem', a: s.id, item: it }); }
-    else if (it === 'pill') { s.lenTarget = Math.min(capOf(s), s.lenTarget + CFG.PILL_LEN * (1 + 0.5 * mod(s, 'bluePill'))); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.PILL_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    else if (it === 'pill') { s.lenTarget = Math.min(capOf(s), s.lenTarget + CFG.PILL_LEN * (1 + 0.5 * mod(s, 'bluePill'))); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.PILL_R); s.pulse = 1; if (s.special === 'grower') s.growT = 10; this.events.push({ type: 'useItem', a: s.id, item: it }); }
     s.item = s.item2 || null; s.item2 = null;
   },
   makeFood(x, z, v) {
@@ -723,15 +742,17 @@ const Sim = {
       skill: isPlayer ? (this.playerSkill || 'boost') : 'boost', cd: 0, swapT: 0, guardT: 0, ouroT: 0, ink: 1, spraying: false, sprayAcc: 0, slowed: false, name: isPlayer ? '你' : look ? look.name : NAMES[ci], name_en: isPlayer ? 'You' : look ? look.name_en : null,
       x: p.x, z: p.z, dir, target: dir, len: CFG.START_LEN, lenTarget: CFG.START_LEN,
       r: CFG.START_R, rTarget: CFG.START_R, trail: [], body: [], alive: true, invuln: 2.5,
-      boost: false, absorbed: 0, pulse: 0, dropT: 0,
+      boost: false, absorbed: 0, pulse: 0, dropT: 0, special: isPlayer ? (this.playerSpecial || null) : null,
       ai: isPlayer ? null : { t: 0, aggr: Math.min(1, rnd(0.35, 1) + (this.aggrBonus || 0)), wander: dir, goal: null },
     };
-    for (let i = 1; i <= s.len / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
+    if (s.special === 'shower') s.len = s.lenTarget = 14;
+    if (s.special) s.r = s.rTarget * rkOf(s);
+    for (let i = 1; i <= s.len * 1.5 / CFG.S + 3; i++) s.trail.push({ x: p.x - Math.cos(dir) * i * CFG.S, z: p.z - Math.sin(dir) * i * CFG.S });
     this.buildBody(s);
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1) * (s.wrapT > 0 ? 0 : 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
@@ -810,31 +831,42 @@ const Sim = {
   },
 
   buildBody(s) {
-    const S = CFG.S, b = [{ x: s.x, z: s.z }];
+    const S = CFG.S, b = [{ x: s.x, z: s.z }], SL = s.bl = s.len * lkOf(s); // drawn length (special skins differ from the score)
     let acc = 0, prev = b[0], done = false;
+    const keepL = s.special === 'grower' ? s.len : SL; // Grower keeps the path for its swollen length, so it can grow back along it
     for (let i = 0; i < s.trail.length; i++) {
       const p = s.trail[i], d = Math.hypot(p.x - prev.x, p.z - prev.z);
-      if (acc + d >= s.len) {
-        const f = (s.len - acc) / (d || 1);
+      if (!done && acc + d >= SL) {
+        const f = (SL - acc) / (d || 1);
         b.push({ x: prev.x + (p.x - prev.x) * f, z: prev.z + (p.z - prev.z) * f });
-        s.trail.length = i + 1; done = true; break;
+        done = true;
       }
-      acc += d; b.push(p); prev = p;
+      if (acc + d >= keepL) { s.trail.length = i + 1; break; }
+      acc += d; if (!done) b.push(p); prev = p;
     }
+    if (!done) acc = Math.min(acc, SL);
     if (!done) { // trail ran out (snake grew while blocked): extend straight
       const n = b.length, a = b[n - 1], c = b[n - 2] || { x: a.x + Math.cos(s.dir), z: a.z + Math.sin(s.dir) };
       let dx = a.x - c.x, dz = a.z - c.z; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
-      let rem = s.len - acc, last = a;
+      let rem = SL - acc, last = a;
       while (rem > 1e-4) { const st = Math.min(S, rem); last = { x: last.x + dx * st, z: last.z + dz * st }; b.push(last); s.trail.push(last); rem -= st; }
     }
     if (s.whipT > 0 && b.length > 6) { // round end: the back half whips side to side (copies, so the trail stays put)
       const n = b.length, i0 = Math.floor(n * 0.45), amp = Math.min(3, s.r * 1.6 + 1) * Math.min(1, s.whipT / 0.4, (WHIP_T - s.whipT) / 0.3);
-      const sw = Math.sin(this.time * 14);
+      const sw = Math.sin(this.time * 14), o = b.slice();
       for (let i = i0; i < n; i++) {
-        const a = b[Math.max(0, i - 1)], c = b[Math.min(n - 1, i + 1)];
+        const a = o[Math.max(0, i - 1)], c = o[Math.min(n - 1, i + 1)];
         let dx = c.x - a.x, dz = c.z - a.z; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
         const w = Math.pow((i - i0) / (n - 1 - i0 || 1), 1.6) * amp * sw;
-        b[i] = { x: b[i].x - dz * w, z: b[i].z + dx * w };
+        b[i] = { x: o[i].x - dz * w, z: o[i].z + dx * w };
+      }
+    }
+    if (s.special === 'banana' && b.length > 4) { // a natural bow to the right (ends stay on the path)
+      const n = b.length, c = Math.min(2.6, 0.1 * SL + 0.25), o = b.slice();
+      for (let i = 1; i < n - 1; i++) {
+        const a = o[i - 1], e = o[i + 1]; let tx = e.x - a.x, tz = e.z - a.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l;
+        const u = i / (n - 1), w = 4 * u * (1 - u) * c;
+        b[i] = { x: o[i].x + tz * w, z: o[i].z - tx * w };
       }
     }
     s.body = b;
@@ -891,7 +923,7 @@ const Sim = {
     if (s.lubeT > 0) s.lubeT = Math.max(0, s.lubeT - dt);
     if (!(s.bubbleT > 0)) return;
     if (s.lenTarget > s.bubbleLen + 0.3) { s.bubbleT = 0; this.events.push({ type: 'pop', a: s.id, x: s.x, z: s.z }); return; } // grew: it bursts
-    s.bubbleCov = (s.bubbleCov || 0) + Math.max(this.speedOf(s), s.len / 1.5) * dt; // how far the sheath has slid back along the body: the whole snake is covered within 1.5 s
+    s.bubbleCov = (s.bubbleCov || 0) + Math.max(this.speedOf(s), BL(s) / 1.5) * dt; // how far the sheath has slid back along the body: the whole snake is covered within 1.5 s
     s.bubbleT = Math.max(0, s.bubbleT - dt);
   },
 
@@ -916,6 +948,8 @@ const Sim = {
       if (m) s.boost = false;
       if (s.ejectT > 0) s.ejectT = Math.max(0, s.ejectT - dt);
       if (s.invuln > 0) s.invuln -= dt;
+      if (s.wrapT > 0) s.wrapT = Math.max(0, s.wrapT - dt); // Turtleneck: foreskin rolling back over the head
+      if (s.special === 'grower') { if (s.growT > 0) s.growT = Math.max(0, s.growT - dt); s.growK = (s.growK || 0) + (((s.boost || s.growT > 0) ? 1 : 0) - (s.growK || 0)) * Math.min(1, dt * 3); }
       if (s.cd > 0) s.cd = Math.max(0, s.cd - dt / (1 - 0.1 * mod(s, 'quickCd')));
       if (s.guardT > 0) s.guardT = Math.max(0, s.guardT - dt);
       this.stepBubble(s, dt);
@@ -927,13 +961,14 @@ const Sim = {
       if (s.still && !m) continue; // tutorial dummy: doesn't move until it gets absorbed
       if (s.ouroT > 0) { this.stepOuro(s, dt); continue; } // biting its own tail: holds still
       s.pulse = Math.max(0, s.pulse - dt * 1.6);
-      const turn = CFG.TURN / (1 + (s.r - CFG.START_R) * 0.35) * (1 + 0.1 * mod(s, 'agile')) * (mod(s, 'tightHole') ? 0.8 : 1) * (mod(s, 'sprinter') ? 0.75 : 1);
       const diff = wrapA(s.target - s.dir);
+      const turn = (s.special === 'chode' ? CFG.TURN : CFG.TURN / (1 + (s.r - CFG.START_R) * 0.35)) * (1 + 0.1 * mod(s, 'agile')) * (mod(s, 'tightHole') ? 0.8 : 1) * (mod(s, 'sprinter') ? 0.75 : 1)
+        * (s.special === 'banana' ? (diff > 0 ? 1.4 : 0.7) : 1); // Banana: right turns fast, left turns slow
       s.dir = wrapA(s.dir + Math.max(-turn * dt, Math.min(turn * dt, diff)));
       const sp = this.speedOf(s);
       s.x += Math.cos(s.dir) * sp * dt; s.z += Math.sin(s.dir) * sp * dt;
       // walls and fixtures
-      mapPush(s, s.r * 1.3);
+      mapPush(s, s.r * 1.3 * headK(s));
       // boosting costs length
       if (s.boost) {
         s.lenTarget -= dt * (mod(s, 'premature') ? 0 : CFG.BOOST_LEN * (1 - 0.15 * mod(s, 'stamina')));
@@ -945,7 +980,7 @@ const Sim = {
       const gr = Math.min(8, sp * 0.8) * dt;
       if (s.whipT > 0) this.stepWhip(s, dt);
       else s.len += Math.max(-gr * 3, Math.min(gr, s.lenTarget - s.len));
-      s.r += (s.rTarget - s.r) * Math.min(1, dt * 3);
+      s.r += (s.rTarget * rkOf(s) - s.r) * Math.min(1, dt * 3);
       // record trail
       const h = s.trail[0];
       if (!h || Math.hypot(s.x - h.x, s.z - h.z) >= CFG.S) s.trail.unshift({ x: s.x, z: s.z });
@@ -953,7 +988,7 @@ const Sim = {
     }
     for (const m of [...this.merges]) this.stepMerge(m, dt);
     this.collide(alive);
-    for (const s of alive) if (s.alive && !(s.merge && s.merge.a === s)) mapPush(s, s.r * 1.3); // shoves can't push anyone into a fixture
+    for (const s of alive) if (s.alive && !(s.merge && s.merge.a === s)) mapPush(s, s.r * 1.3 * headK(s)); // shoves can't push anyone into a fixture
     for (const s of alive) if (s.alive) this.buildBody(s);
     this.eat(alive);
     this.stepTraps(dt, alive);
@@ -967,14 +1002,14 @@ const Sim = {
       for (const B of alive) {
         if (B === A || !B.alive) continue;
         if (A.merge && A.merge.a === B) continue; // never collide with whoever is biting me
-        if (Math.hypot(A.x - B.x, A.z - B.z) > B.len + A.r + B.r + 2) continue;
+        if (Math.hypot(A.x - B.x, A.z - B.z) > BL(B) + A.r * headK(A) + B.r + 2) continue;
         // 1) tail absorb check: head touches tail cap AND comes from within the 45° cone behind it
-        const dx = A.x - B.tx, dz = A.z - B.tz, dist = Math.hypot(dx, dz), reach = A.r * 1.3 + B.r * 1.35; // snout reaches past the head radius; the tail bag is fatter than the body
+        const dx = A.x - B.tx, dz = A.z - B.tz, dist = Math.hypot(dx, dz), reach = A.r * 1.3 * headK(A) + B.r * 1.35; // snout reaches past the head radius; the tail bag is fatter than the body
         if (dist < reach) {
           const cosAng = dist > 1e-6 ? (dx * B.tdx + dz * B.tdz) / dist : 1;
           const approaching = -(fx * B.tdx + fz * B.tdz) > 0.2; // head is moving into the tail
           const busy = A.ejectT > 0 || A.swapT > 0 || B.swapT > 0 || B.guardT > 0 || A.ouroT > 0 || B.ouroT > 0; // mid swap, tail clenched shut, or tail already plugged by its own head
-          const half = CFG.CONE + 0.1745 * mod(A, 'wide') - (mod(B, 'tightHole') ? 0.2618 : 0);
+          const half = CFG.CONE + 0.1745 * mod(A, 'wide') - (mod(B, 'tightHole') ? 0.2618 : 0) + (A.special === 'hammerhead' ? 0.2618 : 0);
           const inCone = (A.bubbleT > 0 && mod(A, 'omni')) || cosAng >= (half === CFG.CONE ? COS_CONE : Math.cos(half));
           if (inCone && approaching && B.bubbleT > 0) { // wrapped in a bubble: the biter bounces off
             const k = reach - dist + 0.8; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k;
@@ -983,7 +1018,7 @@ const Sim = {
           }
           if (inCone && approaching && !busy && B.invuln <= 0 && !B.merge) {
             if (mod(B, 'reverse') && B.r > A.r) { this.devour(B, A); break; } // 反插
-            if (mod(B, 'tight') && Math.random() < 0.25 * mod(B, 'tight')) { // 緊實: squeezed out before it gets in
+            if ((mod(B, 'tight') || B.special === 'turtle') && Math.random() < 0.25 * mod(B, 'tight') + (B.special === 'turtle' ? 0.1 : 0)) { // 緊實: squeezed out before it gets in
               const k = reach - dist + 1.2; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k; A.ejectT = 1.2;
               this.events.push({ type: 'squeeze', a: B.id, b: A.id, x: B.tx, z: B.tz }); continue;
             }
@@ -994,7 +1029,7 @@ const Sim = {
         if (mod(A, 'slippery')) continue; // 滑溜身體: slides right through
         const bb = B.body, rb = B.r * 0.95;
         for (let i = 0; i < bb.length; i++) {
-          const p = bb[i], ex = A.x - p.x, ez = A.z - p.z, rr = A.r * 1.3 + rb;
+          const p = bb[i], ex = A.x - p.x, ez = A.z - p.z, rr = A.r * 1.3 * headK(A) + rb;
           const e2 = ex * ex + ez * ez;
           if (e2 < rr * rr) {
             const e = Math.sqrt(e2) || 1e-3, push = (rr - e);
@@ -1013,7 +1048,8 @@ const Sim = {
   absorb(A, B) {
     if (A.merge && A.merge.b === A) this.eject(A.merge); // bitten, but I bit someone else first: my biter gets squeezed out
     if (A.merge || B.merge) return;
-    const m = { a: A, b: B, t: 0, u: 0, d0: Math.hypot(A.x - B.tx, A.z - B.tz), speed: Math.max(14, (A.len + B.len) / 2.2) };
+    const slow = A.special === 'turtle' ? 1.5 : 1; // Turtleneck plugs slower
+    const m = { a: A, b: B, t: 0, u: 0, d0: Math.hypot(A.x - B.tx, A.z - B.tz), speed: Math.max(14, (BL(A) + BL(B)) / 2.2) / slow, insT: this.INSERT_T * slow };
     A.merge = B.merge = m; A.boost = false; this.merges.push(m);
     this.events.push({ type: 'absorb', a: A.id, b: B.id, x: B.tx, z: B.tz, color: B.color });
   },
@@ -1022,13 +1058,13 @@ const Sim = {
     if (!A.alive || !B.alive) { A.merge = B.merge = null; this.merges = this.merges.filter(x => x !== m); return; }
     m.t += dt;
     this.buildBody(B);
-    const k = Math.min(1, m.t / this.INSERT_T), e = k * k * (3 - 2 * k);
+    const k = Math.min(1, m.t / m.insT), e = k * k * (3 - 2 * k);
     const off = m.d0 + (-B.r * 0.35 - m.d0) * e; // + = behind the tail, - = inside it
     A.x = B.tx + B.tdx * off; A.z = B.tz + B.tdz * off; A.dir = Math.atan2(-B.tdz, -B.tdx);
     const h = A.trail[0];
     if (!h || Math.hypot(A.x - h.x, A.z - h.z) >= CFG.S) A.trail.unshift({ x: A.x, z: A.z });
     this.buildBody(A);
-    if (m.t > this.INSERT_T) { m.u += m.speed * dt; if (m.u >= A.len + B.len) this.finishMerge(m); }
+    if (m.t > m.insT) { m.u += m.speed * dt; if (m.u >= BL(A) + BL(B)) this.finishMerge(m); }
   },
   // the bitten snake bit someone else in time: the biter's head is pushed back out of its tail
   eject(m) {
@@ -1056,9 +1092,9 @@ const Sim = {
     this.buildBody(B); this.buildBody(A);
     A.trail = B.body.slice(1).concat(A.body);
     A.x = B.x; A.z = B.z; A.dir = B.dir;
-    A.len = A.lenTarget = Math.min(capOf(A), A.len + B.len * (1 + 0.15 * mod(A, 'appetite') + (mod(A, 'glass') ? 0.5 : 0)));
+    A.len = A.lenTarget = Math.min(capOf(A), A.len + B.len * plugGain(A));
     A.rTarget = Math.min(CFG.MAX_R, A.rTarget + 0.12 + (B.r - CFG.START_R) * 0.35);
-    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = mod(A, 'premature') ? 2.5 : 0.9;
+    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = mod(A, 'premature') ? 2.5 : 0.9; if (A.special === 'turtle') A.wrapT = 1.9;
     A.merge = B.merge = null; this.merges = this.merges.filter(x => x !== m);
     if (mod(A, 'loot') && (!A.item || (mod(A, 'pocket') && !A.item2))) { const it = this.giveItem(A); this.events.push({ type: 'item', a: A.id, item: it, x: A.x, z: A.z }); }
     if (B.mods && B.mods.lives > 0) { // 九命怪貓: the plugged snake comes back at the start size
@@ -1704,6 +1740,7 @@ const whiteMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .
 const blackMat = new THREE.MeshStandardMaterial({ color: '#12343a', roughness: .3 });
 // cone fan: 90° wedge (±45°) pointing +x, laid on the ground
 const coneGeo = new THREE.CircleGeometry(1, 20, -CFG.CONE, CFG.CONE * 2); coneGeo.rotateX(-Math.PI / 2);
+const foreGeo = (() => { const g = new THREE.TorusGeometry(1.0, 0.4, 14, 32); g.rotateY(Math.PI / 2); g.scale(2.2, 1, 1); return g; })(); // a fat roll around the head
 const coneGeos = new Map([[CFG.CONE.toFixed(4), coneGeo]]);
 function coneGeoFor(half) { // fans for other angles (廣角鏡 widens what you can hit, 菊花緊縮 narrows your own tail)
   const k = half.toFixed(4); let g = coneGeos.get(k);
@@ -1760,6 +1797,8 @@ function makeView(s) {
   const headGeo = headBase.g.clone(); applyMouth(headGeo, 0);
   const hs = new THREE.Mesh(headGeo, mat); hs.castShadow = true; head.add(hs);
   const mouthIn = new THREE.Mesh(sphereGeo, mouthMat); head.add(mouthIn); // dark inside of the mouth
+  let fore = null;
+  if (s.special === 'turtle') { fore = new THREE.Mesh(foreGeo, new THREE.MeshStandardMaterial({ color: new THREE.Color(s.color).multiplyScalar(0.82), roughness: .6 })); fore.castShadow = true; head.add(fore); } // foreskin ring (head-local: +x forward, radius 1)
   const tail = new THREE.Mesh(tailCapGeo, tailMat); tail.castShadow = true; tailMat.side = THREE.DoubleSide;
   const plug = new THREE.Mesh(plugGeo, tailMat); plug.visible = false; tail.add(plug); // in tail-local space
   let calyx = null;
@@ -1772,14 +1811,14 @@ function makeView(s) {
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; scene.add(ring);
   }
   scene.add(tube, head, tail, cone);
-  const v = { tube, head, tail, plug, calyx, cone, ring, mat, tailMat, tubeMat, headGeo, mouthIn, mouthO: -1, textured: !!tx, tailTex, lumpy: sk && sk.lumpy || 0,
+  const v = { fore, tube, head, tail, plug, calyx, cone, ring, mat, tailMat, tubeMat, headGeo, mouthIn, mouthO: -1, textured: !!tx, tailTex, lumpy: sk && sk.lumpy || 0,
     base: new THREE.Color(sk ? (sk.tint || '#ffffff') : s.color), paint: new THREE.Color(s.color), tip: sk && sk.tip ? new THREE.Color(sk.tip) : null };
   views.set(s.id, v); return v;
 }
 function dropView(id) {
   const v = views.get(id); if (!v) return;
   scene.remove(v.tube, v.head, v.tail, v.cone); if (v.ring) scene.remove(v.ring);
-  v.tube.geometry.dispose(); v.headGeo.dispose(); v.mat.dispose(); v.tailMat.dispose(); v.tubeMat.dispose(); v.cone.material.dispose(); if (v.tailTex) v.tailTex.dispose(); if (v.calyx) v.calyx.material.dispose();
+  v.tube.geometry.dispose(); v.headGeo.dispose(); v.mat.dispose(); v.tailMat.dispose(); v.tubeMat.dispose(); v.cone.material.dispose(); if (v.tailTex) v.tailTex.dispose(); if (v.calyx) v.calyx.material.dispose(); if (v.fore) v.fore.material.dispose();
   views.delete(id);
 }
 
@@ -1868,7 +1907,7 @@ function updateView(s, v, t, me) {
   // head/tail swap: both ends pinch shut, then (after the sim flips the body) open again the other way round
   let qEnd = 1;
   if (s.swapT > 0) { const p = 1 - s.swapT / CFG.SWAP_T, a = Math.abs(1 - 2 * p); qEnd = a * a * (3 - 2 * a); }
-  let Lv = s.len, TDX = s.tdx, TDZ = s.tdz;
+  let Lv = BL(s), TDX = s.tdx, TDZ = s.tdz;
   if (n > 3) { // draw the tail ring along the smoothed tube's own end direction (the sim's tdx is measured on the raw path)
     const k = Math.max(1, Math.min(n - 2, Math.round(s.r * 0.8 / CFG.S))), a = b[n - 1 - k], e = b[n - 1];
     const ex = e.x - a.x, ez = e.z - a.z, l = Math.hypot(ex, ez); if (l > 1e-4) { TDX = ex / l; TDZ = ez / l; }
@@ -1879,11 +1918,11 @@ function updateView(s, v, t, me) {
   // tube just wide enough to wrap that head (and rises to its height when the biter is fatter),
   // then eases back to normal over a few radii further up the body
   const bi = m && m.b === s ? m.a : (s.ouroT > 0 ? s : null); // whose head is inside this tail (銜尾蛇: its own)
-  const bk = m && m.b === s ? Math.min(1, m.t / Sim.INSERT_T) : Math.max(0, Math.min(1, (CFG.OURO_T - s.ouroT) / CFG.OURO_IN, s.ouroT / 0.25));
+  const bk = m && m.b === s ? Math.min(1, m.t / m.insT) : Math.max(0, Math.min(1, (CFG.OURO_T - s.ouroT) / CFG.OURO_IN, s.ouroT / 0.25));
   const sl = bi ? { k: bk, R: bi.r * 1.16, Ls: s.r * 0.35 + bi.r * (HEAD_STRETCH + 0.5), Lt: 1.2 + bi.r * 2.4, dy: Math.max(0, bi.r - s.r) } : null;
   const sleeveW = h => {
     if (!sl) return 0;
-    const ft = s.len - h; if (ft <= sl.Ls) return sl.k;
+    const ft = Lv - h; if (ft <= sl.Ls) return sl.k;
     const x = Math.min(1, (ft - sl.Ls) / sl.Lt); return (1 - x * x * (3 - 2 * x)) * sl.k;
   };
   const radAt = (i, h) => { // h = arc distance from this snake's head
@@ -1898,8 +1937,8 @@ function updateView(s, v, t, me) {
     if (qEnd < 1) { const dEnd = Math.min(h, Lv - h); r *= qEnd + (1 - qEnd) * Math.min(1, dEnd / (2.5 * s.r)); } // swap: both ends pinch shut, then open the other way round
     if (sl) r += (Math.max(r * 1.12, sl.R) - r) * sleeveW(h); // tail stretches around the head pushed into it
     if (!m) return r;
-    if (m.t > Sim.INSERT_T) { // bulge travelling from the biter's tail to the front snake's head
-      const fromTail = m.a === s ? s.len - h : m.a.len + (s.len - h);
+    if (m.t > m.insT) { // bulge travelling from the biter's tail to the front snake's head
+      const fromTail = m.a === s ? Lv - h : BL(m.a) + (Lv - h);
       const q = (fromTail - m.u) / (0.9 + m.a.r * 1.4);
       r *= 1 + 0.7 * Math.exp(-q * q);
     }
@@ -1909,8 +1948,8 @@ function updateView(s, v, t, me) {
   const cA = m ? views.get(m.a.id)?.paint : null, tmpC = updateView.c || (updateView.c = new THREE.Color());
   const colorAt = h => {
     if (v.tip && !(m && m.b === s)) { const f = Math.min(1, Math.max(0, (h - (Lv - s.r * 0.9)) / (s.r * 0.5))); return f > 0 ? tmpC.copy(v.base).lerp(v.tip, f) : v.base; } // eggplant: green at the tail end
-    if (!m || m.b !== s || !cA || m.t <= Sim.INSERT_T) return v.base;
-    const fromTail = m.a.len + (s.len - h), f = Math.min(1, Math.max(0, (m.u - fromTail) / 1.2 + 0.5));
+    if (!m || m.b !== s || !cA || m.t <= m.insT) return v.base;
+    const fromTail = BL(m.a) + (Lv - h), f = Math.min(1, Math.max(0, (m.u - fromTail) / 1.2 + 0.5));
     return tmpC.copy(v.base).lerp(cA, f);
   };
   const col = v.tube.geometry.attributes.color.array, uvA = v.textured ? v.tube.geometry.attributes.uv.array : null;
@@ -1967,10 +2006,15 @@ function updateView(s, v, t, me) {
   v.tube.geometry.attributes.normal.needsUpdate = true;
   v.tube.geometry.attributes.color.needsUpdate = true;
   if (uvA) { v.tube.geometry.attributes.uv.needsUpdate = true; v.tailTex.offset.y = Lv / (Math.PI * 2 * s.r); }
-  v.mat.color.copy(colorAt(0)); v.tailMat.color.copy(colorAt(s.len));
+  v.mat.color.copy(colorAt(0)); v.tailMat.color.copy(colorAt(Lv));
   v.tube.geometry.setDrawRange(0, (nR - 1) * RAD * 6);
   const cy = s.r * swell;
   v.head.position.set(b[0].x, cy + lift[0], b[0].z); v.head.rotation.y = -Math.atan2(hdz, hdx); v.head.scale.setScalar(Math.max(1e-3, radAt(0, 0) * qEnd));
+  if (s.special === 'hammerhead') { const hr = radAt(0, 0) * qEnd; v.head.scale.set(hr * 1.35, hr * 2, hr * 2); v.head.position.y += s.r * 0.75; } // swollen head, riding a bit higher so it clears the floor
+  if (v.fore) { // Turtleneck: the foreskin rolls back while plugging, then slides forward over the head again
+    const k = m && m.a === s ? 0 : s.wrapT > 0 ? Math.max(0, Math.min(1, (1.9 - s.wrapT) / 1.6)) : 1;
+    v.fore.position.x = -0.3 + 0.8 * k; const sc = 1.12 - 0.1 * k; v.fore.scale.set(1, sc, sc);
+  }
   // mouth opens left/right while spitting
   let mo = 0;
   if (s.spitT > 0) { const k = 1 - s.spitT / 0.9; mo = Math.sqrt(Math.max(0, Math.sin(Math.min(1, k / 0.95) * Math.PI))); }
@@ -1982,7 +2026,7 @@ function updateView(s, v, t, me) {
     v.mouthIn.position.set(MOUTH_X - D * 0.95, MOUTH_Y, 0); v.mouthIn.scale.set(0.04, 0.26, wz * 0.5); // sits inside the slit
   }
   const tp = b[n - 1];
-  v.tail.position.set(tp.x, cy + lift[nR - 1] + (sl ? sl.dy * sleeveW(s.len) : 0), tp.z); v.tail.scale.setScalar(Math.max(1e-3, radAt(n - 1, Lv) * qEnd));
+  v.tail.position.set(tp.x, cy + lift[nR - 1] + (sl ? sl.dy * sleeveW(Lv) : 0), tp.z); v.tail.scale.setScalar(Math.max(1e-3, radAt(n - 1, Lv) * qEnd));
   v.plug.visible = gC > 0; if (gC > 0) v.plug.scale.set(0.62 * gC, 0.5 * gC, 0.62 * gC);
   tbY.set(TDX, 0, TDZ); tbX.set(-TDZ, 0, TDX); tailBasis.makeBasis(tbX, tbY, tbZ); v.tail.quaternion.setFromRotationMatrix(tailBasis);
   // tail cone
@@ -2075,7 +2119,7 @@ const SKINS = ['#ff5a7a', ...COLORS];
 const MODES = ['endless', 'br', 'classic']; // 經典 / 吃雞 (last snake standing, no respawns)
 const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: CFG.BR_N });
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
-try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
+try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (SPECIALS[sv.special]) settings.special = sv.special; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
 const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), set: document.getElementById('setOv'), ref: document.getElementById('refOv') };
 const showOv = name => { for (const k in ovs) ovs[k].hidden = k !== name; if (name === 'start' && typeof BGM !== 'undefined') BGM.scene('menu'); };
@@ -2089,6 +2133,7 @@ function renderMenus() {
   for (const b of document.querySelectorAll('#skillOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.k === settings.skill));
   for (const b of document.querySelectorAll('#mapOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.map));
   document.getElementById('mapName').textContent = T('menu.mapSub', { name: L(MAPS[settings.map], 'name') });
+  for (const b of document.querySelectorAll('#specOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.sp === (settings.special || '')));
   for (const b of document.querySelectorAll('#modeOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.mode));
   document.getElementById('modeName').textContent = T('menu.modeSub', { name: modeName(settings.mode) });
   updateSkillBtn();
@@ -2109,6 +2154,10 @@ function buildMenus() {
   for (const id in MAPS) { const m = MAPS[id], b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${L(m, 'name')}</b><p>${L(m, 'desc')}</p>`;
     b.addEventListener('click', () => { settings.map = id; saveSettings(); renderMenus(); if (!running && !tut) startAttract(); }); mo.appendChild(b); }
+  const so = document.getElementById('specOpts'); so.innerHTML = '';
+  for (const id of [null, ...SPECIAL_IDS]) { const sp = id && SPECIALS[id], b = document.createElement('button'); b.className = 'opt'; b.dataset.sp = id || '';
+    b.innerHTML = `<b>${sp ? L(sp, 'name') : T('spec.none')}</b><p>${sp ? L(sp, 'desc') : T('spec.noneDesc')}</p>`;
+    b.addEventListener('click', () => { settings.special = id; saveSettings(); renderMenus(); }); so.appendChild(b); }
   const md = document.getElementById('modeOpts'); md.innerHTML = '';
   for (const id of MODES) { const b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${modeName(id)}</b><p>${modeDesc(id)}</p>`;
@@ -2148,7 +2197,7 @@ function newGame() {
   for (const id of [...views.keys()]) dropView(id);
   buildMap(settings.map);
   Sim.reset();
-  Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern;
+  Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern; Sim.playerSpecial = settings.special || null;
   me = Sim.addSnake(true);
   br = settings.mode === 'br'; brN = br ? CFG.BR_N : 0;
   endless = settings.mode === 'endless'; cardPause = false; round = 0; pity = 0; document.getElementById('cardOv').hidden = true;
@@ -2496,7 +2545,7 @@ function pickCard(c) {
   me.mods[c.id] = (me.mods[c.id] || 0) + 1;
   if (c.id === 'nineLives') me.mods.lives = (me.mods.lives || 0) + 1;
   round++;
-  const keep = Math.max(CFG.START_LEN + 4 * mod(me, 'headStart'), mod(me, 'bigOne') ? me.len * 0.25 : 0);
+  const keep = Math.max(startLenOf(me) + 4 * mod(me, 'headStart'), mod(me, 'bigOne') ? me.len * 0.25 : 0);
   me.maxLen = endlessGoal();
   Sim.startRebirth(me, Math.min(keep, me.maxLen - 10));
   Sim.aggrBonus = Math.min(0.5, 0.1 * round); for (const s of Sim.snakes) if (s.ai) s.ai.aggr = Math.min(1, s.ai.aggr + 0.1);
@@ -2824,7 +2873,7 @@ function startTutorial() {
   for (const id of [...views.keys()]) dropView(id);
   buildMap(settings.map);
   Sim.reset(); Sim.food.length = 0; Sim.orbs.length = 0; Sim.noFood = true;
-  Sim.playerColor = settings.color; Sim.playerPattern = settings.pattern; Sim.playerSkill = 'boost';
+  Sim.playerColor = settings.color; Sim.playerPattern = settings.pattern; Sim.playerSkill = 'boost'; Sim.playerSpecial = null;
   me = Sim.addSnake(true); me.invuln = 0;
   camFollow = me; running = true; camPos.set(me.x, 40, me.z + 30);
   showOv(null); document.getElementById('overOv').hidden = true;
