@@ -585,7 +585,7 @@ const Sim = {
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) / (1 + (s.r - CFG.START_R) * 0.22) * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? CFG.PUDDLE_SLOW : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? CFG.TISSUE_SLOW : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? CFG.PUDDLE_SLOW : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? CFG.TISSUE_SLOW : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
