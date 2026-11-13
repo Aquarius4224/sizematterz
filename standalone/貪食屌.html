@@ -237,8 +237,8 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 <div class="overlay" id="startOv">
   <div class="card menu">
     <h1 data-i18n="title.sub">貪食屌</h1>
-    <button class="sub" id="modeBtn"><span data-i18n="menu.mode">MODE</span> <small id="modeName">模式</small></button>
     <button class="play big" id="startBtn" data-i18n="menu.start">START</button>
+    <button class="sub" id="modeBtn"><span data-i18n="menu.mode">MODE</span> <small id="modeName">模式</small></button>
     <button class="sub" id="skinBtn"><span data-i18n="menu.skin">SKIN</span> <small><span data-i18n="menu.skinSub">造型</span> <span class="dot" id="skinDot"></span></small></button>
     <button class="sub" id="skillBtn"><span data-i18n="menu.skill">SKILL</span> <small id="skillName">技能</small></button>
     <button class="sub" id="mapBtn"><span data-i18n="menu.map">MAP</span> <small id="mapName">地圖</small></button>
@@ -1694,6 +1694,12 @@ const whiteMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .
 const blackMat = new THREE.MeshStandardMaterial({ color: '#12343a', roughness: .3 });
 // cone fan: 90° wedge (±45°) pointing +x, laid on the ground
 const coneGeo = new THREE.CircleGeometry(1, 20, -CFG.CONE, CFG.CONE * 2); coneGeo.rotateX(-Math.PI / 2);
+const coneGeos = new Map([[CFG.CONE.toFixed(4), coneGeo]]);
+function coneGeoFor(half) { // fans for other angles (廣角鏡 widens what you can hit, 菊花緊縮 narrows your own tail)
+  const k = half.toFixed(4); let g = coneGeos.get(k);
+  if (!g) { g = new THREE.CircleGeometry(1, 20, -half, half * 2); g.rotateX(-Math.PI / 2); coneGeos.set(k, g); }
+  return g;
+}
 
 const views = new Map();
 // reflections for the metal skins: a soft studio-like environment painted on a canvas (bright sky, warm floor, a few lamps)
@@ -1954,10 +1960,12 @@ function updateView(s, v, t, me) {
   const ta = Math.atan2(s.tdz, s.tdx);
   v.cone.position.x = s.tx; v.cone.position.z = s.tz; v.cone.rotation.y = -ta;
   v.cone.scale.setScalar(s.r + 2.6);
+  const half = CFG.CONE - (mod(s, 'tightHole') ? 0.2618 : 0) + (me && me !== s ? 0.1745 * mod(me, 'wide') : 0);
+  { const g = coneGeoFor(half); if (v.cone.geometry !== g) v.cone.geometry = g; }
   let op = s.invuln > 0 || s.guardT > 0 || s.ouroT > 0 ? 0 : 0.3;
   if (me && me.alive && !s.isPlayer && s.invuln <= 0) { // highlight when the player is lined up for an absorb
     const dx = me.x - s.tx, dz = me.z - s.tz, d = Math.hypot(dx, dz);
-    if (d < 9 && (dx * s.tdx + dz * s.tdz) / (d || 1) >= COS_CONE) op = 0.7;
+    if (d < 9 && (dx * s.tdx + dz * s.tdz) / (d || 1) >= Math.cos(half)) op = 0.7;
   }
   v.cone.material.opacity = op; v.cone.visible = showCones && op > 0 && !m;
   v.mat.opacity = v.tailMat.opacity = v.tubeMat.opacity = s.invuln > 0 ? (0.45 + 0.25 * Math.sin(t * 18)) : 1;
