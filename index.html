@@ -496,19 +496,19 @@ const mod = (s, k) => (s.mods && s.mods[k]) || 0; // how many of card k this sna
 const SPECIALS = {
   grower: { name: 'Grower', name_en: 'Grower', desc: '平常長度只有同分的一半、粗細 2/3；加速時或吃下威爾鋼後 10 秒內會明顯變長變粗。', desc_en: 'Normally half as long and 2/3 as thick as others with the same score; swells up while boosting or for 10s after a Blue Pill.' },
   shower: { name: 'Shower', name_en: 'Shower', desc: '開場 14 分，身體是同分的 1.5 倍長、1.25 倍粗；但插入別人只拿到 0.8 倍分數。', desc_en: 'Starts at 14 and is 1.5× as long and 1.25× as thick as others with the same score, but gets only 0.8× from plugs.' },
-  chode: { name: 'Chode', name_en: 'Chode', desc: '又短又粗（0.6 倍長、1.4 倍粗），變粗也不會轉得比較慢；但長度上限 40。', desc_en: 'Short and thick (0.6× length, 1.4× girth) and turns fast at any girth, but tops out at 40.' },
-  hammerhead: { name: 'Hammerhead', name_en: 'Hammerhead', desc: '頭比身體粗 2 倍，插入判定角度 ±60°；但比較容易被身體和家具卡住。', desc_en: 'Head twice as thick as the body and a ±60° plug angle, but snags on bodies and furniture more.' },
-  turtle: { name: 'Turtleneck', name_en: 'Turtleneck', desc: '頭前有一圈包皮，被插入時 10% 機率把對方擠出去；但插入別人比較慢，插完要等包皮包回頭上才能動。', desc_en: 'A foreskin ring on the head: 10% chance to squeeze out anyone who plugs you, but you plug slower and must wait for it to roll back over afterwards.' },
+  chode: { name: 'Chode', name_en: 'Chode', desc: '又短又粗（0.6 倍長、1.4 倍粗），變粗也不會轉得比較慢；但身體最長只畫到 40（分數照樣往上漲）。', desc_en: 'Short and thick (0.6× length, 1.4× girth) and turns fast at any girth; the body is drawn at most 40 long, though the score keeps climbing.' },
+  hammerhead: { name: 'Hammerhead', name_en: 'Hammerhead', desc: '頭比身體粗 2 倍，插入判定角度 ±55°；但比較容易被身體卡住，頭撞到家具會減速。', desc_en: 'Head twice as thick as the body and a ±55° plug angle, but snags on bodies more and slows down when it bumps furniture.' },
+  turtle: { name: 'Turtleneck', name_en: 'Turtleneck', desc: '頭前有一圈包皮，被插入時 20% 機率把對方擠出去（觸發後冷卻 8 秒）；但插入別人比較慢，插完要等 1 秒讓包皮包回頭上才能動。', desc_en: 'A foreskin ring on the head: 20% chance to squeeze out anyone who plugs you (8 s cooldown after it fires), but you plug slower and wait 1 s for it to roll back over afterwards.' },
   banana: { name: 'Banana', name_en: 'Banana', desc: '身體天生往右彎，往右轉特別快（×1.4），往左轉比較慢（×0.7）。', desc_en: 'Body curves to the right: turns right 1.4× faster, left 0.7× slower.' },
 };
 const SPECIAL_IDS = Object.keys(SPECIALS);
-const lkOf = s => s.special === 'grower' ? 0.5 + 0.5 * (s.growK || 0) : s.special === 'shower' ? 1.5 : s.special === 'chode' ? 0.6 : 1; // drawn length ÷ score
+const lkOf = s => s.special === 'grower' ? 0.5 + 0.5 * (s.growK || 0) : s.special === 'shower' ? 1.5 : s.special === 'chode' ? Math.min(0.6, 40 / Math.max(1, s.len)) : 1; // drawn length ÷ score (Chode's body is drawn at most 40 long)
 const rkOf = s => s.special === 'grower' ? 0.667 + 0.633 * (s.growK || 0) : s.special === 'shower' ? 1.25 : s.special === 'chode' ? 1.4 : 1; // drawn girth ÷ normal
 const headK = s => s.special === 'hammerhead' ? 2 : 1;
 const startLenOf = s => s.special === 'shower' ? 14 : CFG.START_LEN;
 const plugGain = A => 1 + 0.15 * mod(A, 'appetite') + (mod(A, 'glass') ? 0.5 : 0) - (A.special === 'shower' ? 0.2 : 0);
 const BL = s => s.bl || s.len; // drawn body length
-const capOf = s => Math.min(s.special === 'chode' ? 40 : 1e9, s.maxLen || CFG.MAX_LEN);
+const capOf = s => s.maxLen || CFG.MAX_LEN;
 const slowK = (s, f) => 1 - (1 - f) * (1 - 0.25 * mod(s, 'antiSlip'));
 const WHIP_T = 2.6; // round end: the tail whips and sprays while the snake shrinks back
 // skills a player can bring into a game (AI snakes always use boost)
@@ -604,16 +604,19 @@ function mapFree(x, z, m) { // inside the floor and clear of every fixture by ma
 function mapPush(p, rad) { // keep a circle (p.x, p.z, rad) on the floor and out of fixtures
   const hw = MAP.W / 2 - rad, hh = MAP.H / 2 - rad;
   p.x = Math.max(-hw, Math.min(hw, p.x)); p.z = Math.max(-hh, Math.min(hh, p.z));
+  let hit = false;
   for (const o of MAP.obstacles) {
     const cx = Math.max(o.x0, Math.min(o.x1, p.x)), cz = Math.max(o.z0, Math.min(o.z1, p.z));
     const dx = p.x - cx, dz = p.z - cz, d = Math.hypot(dx, dz);
     if (d >= rad) continue;
+    hit = true;
     if (d > 1e-6) { p.x += dx / d * (rad - d); p.z += dz / d * (rad - d); }
     else { // centre inside the box: leave through the nearest side
       const L = p.x - o.x0, Rr = o.x1 - p.x, T = p.z - o.z0, B = o.z1 - p.z, mn = Math.min(L, Rr, T, B);
       if (mn === L) p.x = o.x0 - rad; else if (mn === Rr) p.x = o.x1 + rad; else if (mn === T) p.z = o.z0 - rad; else p.z = o.z1 + rad;
     }
   }
+  return hit;
 }
 function randomFree(m) {
   for (let k = 0; k < 200; k++) { const x = rnd(-MAP.W / 2, MAP.W / 2), z = rnd(-MAP.H / 2, MAP.H / 2); if (mapFree(x, z, m)) return { x, z }; }
@@ -781,7 +784,7 @@ const Sim = {
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1) * (s.wrapT > 0 ? 0 : 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1) * (s.wrapT > 0 ? 0 : 1) * (s.bumpT > 0 ? 0.55 : 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
@@ -977,7 +980,7 @@ const Sim = {
       if (m) s.boost = false;
       if (s.ejectT > 0) s.ejectT = Math.max(0, s.ejectT - dt);
       if (s.invuln > 0) s.invuln -= dt;
-      if (s.wrapT > 0) s.wrapT = Math.max(0, s.wrapT - dt); // Turtleneck: foreskin rolling back over the head
+      if (s.foreCd > 0) s.foreCd -= dt; if (s.bumpT > 0) s.bumpT -= dt; if (s.wrapT > 0) s.wrapT = Math.max(0, s.wrapT - dt); // Turtleneck: foreskin rolling back over the head
       if (s.special === 'grower') { if (s.growT > 0) s.growT = Math.max(0, s.growT - dt); s.growK = (s.growK || 0) + (((s.boost || s.growT > 0) ? 1 : 0) - (s.growK || 0)) * Math.min(1, dt * 3); }
       if (s.cd > 0) s.cd = Math.max(0, s.cd - dt / (1 - 0.1 * mod(s, 'quickCd')));
       if (s.guardT > 0) s.guardT = Math.max(0, s.guardT - dt);
@@ -997,7 +1000,7 @@ const Sim = {
       const sp = this.speedOf(s);
       s.x += Math.cos(s.dir) * sp * dt; s.z += Math.sin(s.dir) * sp * dt;
       // walls and fixtures
-      mapPush(s, s.r * 1.3 * headK(s));
+      if (mapPush(s, s.r * 1.3 * headK(s)) && s.special === 'hammerhead') s.bumpT = 0.6; // Hammerhead: bumping furniture slows it
       // boosting costs length
       if (s.boost) {
         s.lenTarget -= dt * (mod(s, 'premature') ? 0 : CFG.BOOST_LEN * (1 - 0.15 * mod(s, 'stamina')));
@@ -1038,7 +1041,7 @@ const Sim = {
           const cosAng = dist > 1e-6 ? (dx * B.tdx + dz * B.tdz) / dist : 1;
           const approaching = -(fx * B.tdx + fz * B.tdz) > 0.2; // head is moving into the tail
           const busy = A.ejectT > 0 || A.swapT > 0 || B.swapT > 0 || B.guardT > 0 || A.ouroT > 0 || B.ouroT > 0; // mid swap, tail clenched shut, or tail already plugged by its own head
-          const half = CFG.CONE + 0.1745 * mod(A, 'wide') - (mod(B, 'tightHole') ? 0.2618 : 0) + (A.special === 'hammerhead' ? 0.2618 : 0);
+          const half = CFG.CONE + 0.1745 * mod(A, 'wide') - (mod(B, 'tightHole') ? 0.2618 : 0) + (A.special === 'hammerhead' ? 0.1745 : 0);
           const inCone = (A.bubbleT > 0 && mod(A, 'omni')) || cosAng >= (half === CFG.CONE ? COS_CONE : Math.cos(half));
           if (inCone && approaching && B.bubbleT > 0) { // wrapped in a bubble: the biter bounces off
             const k = reach - dist + 0.8; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k;
@@ -1047,7 +1050,9 @@ const Sim = {
           }
           if (inCone && approaching && !busy && B.invuln <= 0 && !B.merge) {
             if (mod(B, 'reverse') && B.r > A.r) { this.devour(B, A); break; } // 反插
-            if ((mod(B, 'tight') || B.special === 'turtle') && Math.random() < 0.25 * mod(B, 'tight') + (B.special === 'turtle' ? 0.1 : 0)) { // 緊實: squeezed out before it gets in
+            const foreOk = B.special === 'turtle' && !(B.foreCd > 0), r0 = Math.random(), tk = 0.25 * mod(B, 'tight');
+            if (r0 < tk + (foreOk ? 0.2 : 0)) { // 緊實 / Turtleneck: squeezed out before it gets in
+              if (r0 >= tk) B.foreCd = 8; // the foreskin's own squeeze then rests
               const k = reach - dist + 1.2; A.x += dx / (dist || 1) * k; A.z += dz / (dist || 1) * k; A.ejectT = 1.2;
               this.events.push({ type: 'squeeze', a: B.id, b: A.id, x: B.tx, z: B.tz }); continue;
             }
@@ -1123,7 +1128,7 @@ const Sim = {
     A.x = B.x; A.z = B.z; A.dir = B.dir;
     A.len = A.lenTarget = Math.min(capOf(A), A.len + B.len * plugGain(A));
     A.rTarget = Math.min(CFG.MAX_R, A.rTarget + 0.12 + (B.r - CFG.START_R) * 0.35);
-    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = mod(A, 'premature') ? 2.5 : 0.9; if (A.special === 'turtle') A.wrapT = 1.9;
+    A.absorbed += 1 + B.absorbed; A.pulse = 1; A.invuln = 0.6; A.spitT = mod(A, 'premature') ? 2.5 : 0.9; if (A.special === 'turtle') A.wrapT = 1.0;
     A.merge = B.merge = null; this.merges = this.merges.filter(x => x !== m);
     if (mod(A, 'loot') && (!A.item || (mod(A, 'pocket') && !A.item2))) { const it = this.giveItem(A); this.events.push({ type: 'item', a: A.id, item: it, x: A.x, z: A.z }); }
     if (B.mods && B.mods.lives > 0) { // 九命怪貓: the plugged snake comes back at the start size
@@ -1840,7 +1845,7 @@ const blackMat = new THREE.MeshStandardMaterial({ color: '#12343a', roughness: .
 // cone fan: 90° wedge (±45°) pointing +x, laid on the ground
 const coneGeo = new THREE.CircleGeometry(1, 20, -CFG.CONE, CFG.CONE * 2); coneGeo.rotateX(-Math.PI / 2);
 const foreGeo = (() => { // Turtleneck foreskin: a smooth sleeve hugging the back of the head (head-local, radius 1), flush with the body at the neck, ending in a soft rolled lip
-  const prof = [[1.0, -0.6], [1.015, -0.4], [1.045, -0.15], [1.06, 0.1], [1.04, 0.35], [0.98, 0.56], [0.89, 0.76], [0.81, 0.9], [0.77, 0.97], [0.735, 1.0], [0.7, 0.985], [0.685, 0.95]];
+  const prof = [[1.0, -0.6], [1.015, -0.4], [1.05, -0.15], [1.085, 0.1], [1.1, 0.35], [1.08, 0.56], [1.03, 0.74], [0.96, 0.88], [0.88, 0.98], [0.79, 1.03], [0.71, 1.02], [0.665, 0.97], [0.655, 0.91]]; // thickens toward the front lip
   const g = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), HEAD_SEGS); g.rotateZ(-Math.PI / 2); return g;
 })();
 const coneGeos = new Map([[CFG.CONE.toFixed(4), coneGeo]]);
@@ -2114,8 +2119,8 @@ function updateView(s, v, t, me) {
   v.head.position.set(b[0].x, cy + lift[0], b[0].z); v.head.rotation.y = -Math.atan2(hdz, hdx); v.head.scale.setScalar(Math.max(1e-3, radAt(0, 0) * qEnd));
   if (s.special === 'hammerhead') { const hr = radAt(0, 0) * qEnd; v.head.scale.set(hr * 1.35, hr * 2, hr * 2); v.head.position.y += s.r * 0.75; } // swollen head, riding a bit higher so it clears the floor
   if (v.fore) { // Turtleneck: the foreskin rolls back while plugging, then slides forward over the head again
-    const k = m && m.a === s ? 0 : s.wrapT > 0 ? Math.max(0, Math.min(1, (1.9 - s.wrapT) / 1.6)) : 1;
-    v.fore.position.x = -0.55 * (1 - k); const sc = 1 + 0.06 * (1 - k); v.fore.scale.set(1, sc, sc); // rolled back onto the neck while plugging
+    const k = m && m.a === s ? 0 : s.wrapT > 0 ? Math.max(0, Math.min(1, (1.0 - s.wrapT) / 0.85)) : 1;
+    v.fore.position.x = -1.05 * (1 - k); const sc = 1 + 0.08 * (1 - k); v.fore.scale.set(1, sc, sc); // rolled back onto the neck while plugging
   }
   // mouth opens left/right while spitting
   let mo = 0;
@@ -2135,7 +2140,7 @@ function updateView(s, v, t, me) {
   const ta = Math.atan2(s.tdz, s.tdx);
   v.cone.position.set(s.tx, groundY(s.tx, s.tz) + 0.16, s.tz); v.cone.rotation.y = -ta; // above the shower's wet patches (0.09) and ripples (0.12)
   v.cone.scale.setScalar(s.r + 2.6);
-  const half = CFG.CONE - (mod(s, 'tightHole') ? 0.2618 : 0) + (me && me !== s ? 0.1745 * mod(me, 'wide') : 0);
+  const half = CFG.CONE - (mod(s, 'tightHole') ? 0.2618 : 0) + (me && me !== s ? 0.1745 * mod(me, 'wide') + (me.special === 'hammerhead' ? 0.1745 : 0) : 0);
   { const g = coneGeoFor(half); if (v.cone.geometry !== g) v.cone.geometry = g; }
   let op = s.invuln > 0 || s.guardT > 0 || s.ouroT > 0 ? 0 : 0.3;
   if (me && me.alive && !s.isPlayer && s.invuln <= 0) { // highlight when the player is lined up for an absorb
