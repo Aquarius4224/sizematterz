@@ -721,7 +721,7 @@ const Sim = {
     if (s.lubeT > 0) s.lubeT = Math.max(0, s.lubeT - dt);
     if (!(s.bubbleT > 0)) return;
     if (s.lenTarget > s.bubbleLen + 0.3) { s.bubbleT = 0; this.events.push({ type: 'pop', a: s.id, x: s.x, z: s.z }); return; } // grew: it bursts
-    s.bubbleCov = (s.bubbleCov || 0) + this.speedOf(s) * dt; // how far the sheath has slid back along the body (it stays put on the floor while the snake pushes through)
+    s.bubbleCov = (s.bubbleCov || 0) + Math.max(this.speedOf(s), s.len / 1.5) * dt; // how far the sheath has slid back along the body: the whole snake is covered within 1.5 s
     s.bubbleT = Math.max(0, s.bubbleT - dt);
   },
 
@@ -1738,6 +1738,7 @@ function updateView(s, v, t, me) {
     if (i === 0) { tx = -hdx; tz = -hdz; } // first ring faces exactly the way the head does
     if (i === nR - 1) { tx = TDX; tz = TDZ; } // last ring lines up exactly with the tail cap
     const sx = -tz, sz = tx, r = radAt(i, h), cy = s.r * swell + lift[i] + (sl ? sl.dy * sleeveW(h) : 0), cc = colorAt(h);
+    { const sp = v.sp || (v.sp = []); if (i === 0) sp.length = 0; sp.push(p.x, cy, p.z); } // drawn spine centres (with lift), for things that wrap the body
     for (let k = 0, q = o; k < RV; k++, q += 3) { col[q] = cc.r; col[q + 1] = cc.g; col[q + 2] = cc.b; }
     if (uvA) { const vv = h / (Math.PI * 2 * s.r); for (let k = 0, q = o / 3 * 2; k < RV; k++, q += 2) { uvA[q] = k / RAD; uvA[q + 1] = vv; } }
     const lw = v.lumpy ? v.lumpy * Math.min(1, h / (s.r * 1.6), Math.max(0, (Lv - h - s.r * 1.4) / (s.r * 1.6))) : 0, lv = h / (Math.PI * 2 * s.r);
@@ -2418,25 +2419,30 @@ function updateTraps(dt) {
         g.add(tube, cap, tip, ring); scene.add(g); tv.bub = { g, tube, cap, tip, ring };
       }
       const B = tv.bub, R = s.r * 1.5, pts = [];
-      // the sheath covers the body from the head back to the rolled rim, which slides toward the tail as the snake pushes forward
+      // follow the drawn spine, so the sheath rises with the body where it rides over a coil
+      const vw = views.get(s.id), SP = vw && vw.sp && vw.sp.length >= 6 ? vw.sp : null;
+      const N = SP ? SP.length / 3 : n, X = i => SP ? SP[i * 3] : b[i].x, Y = i => SP ? SP[i * 3 + 1] : s.r, Z = i => SP ? SP[i * 3 + 2] : b[i].z;
+      // the sheath covers the body from the head back to the rolled rim, which slides toward the tail
       const cov = s.bubbleCov == null ? 1e9 : s.bubbleCov + s.r * 0.6;
-      let acc = 0, cut = n - 1, rx = s.tx, rz = s.tz, rdx = s.tdx, rdz = s.tdz, full = true;
-      for (let i = 1; i < n; i++) {
-        const sl = Math.hypot(b[i].x - b[i - 1].x, b[i].z - b[i - 1].z);
-        if (acc + sl >= cov) { const k = (cov - acc) / (sl || 1); rx = b[i - 1].x + (b[i].x - b[i - 1].x) * k; rz = b[i - 1].z + (b[i].z - b[i - 1].z) * k; rdx = (b[i].x - b[i - 1].x) / (sl || 1); rdz = (b[i].z - b[i - 1].z) / (sl || 1); cut = i - 1; full = false; break; }
+      let acc = 0, cut = N - 1, rx = X(N - 1), ry = Y(N - 1), rz = Z(N - 1), rdx = s.tdx, rdz = s.tdz, full = true;
+      for (let i = 1; i < N; i++) {
+        const sl = Math.hypot(X(i) - X(i - 1), Z(i) - Z(i - 1));
+        if (acc + sl >= cov) { const k = (cov - acc) / (sl || 1); rx = X(i - 1) + (X(i) - X(i - 1)) * k; ry = Y(i - 1) + (Y(i) - Y(i - 1)) * k; rz = Z(i - 1) + (Z(i) - Z(i - 1)) * k; rdx = (X(i) - X(i - 1)) / (sl || 1); rdz = (Z(i) - Z(i - 1)) / (sl || 1); cut = i - 1; full = false; break; }
         acc += sl;
       }
-      for (let i = 0; i <= cut; i += 2) pts.push(new THREE.Vector3(b[i].x, s.r, b[i].z));
-      if (full) { if (cut % 2) pts.push(new THREE.Vector3(b[n - 1].x, s.r, b[n - 1].z)); }
-      else pts.push(new THREE.Vector3(rx, s.r, rz));
-      if (pts.length < 2) { let hx0 = b[0].x - b[Math.min(n - 1, 2)].x, hz0 = b[0].z - b[Math.min(n - 1, 2)].z; const l0 = Math.hypot(hx0, hz0) || 1; pts.unshift(new THREE.Vector3(b[0].x + hx0 / l0 * 0.3, s.r, b[0].z + hz0 / l0 * 0.3)); }
-      B.tube.geometry.dispose(); B.tube.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.min(80, pts.length * 3), R, 14, false);
-      let hx = b[0].x - b[Math.min(n - 1, 2)].x, hz = b[0].z - b[Math.min(n - 1, 2)].z; { const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l; }
-      B.cap.position.set(b[0].x + hx * s.r * 0.5, s.r, b[0].z + hz * s.r * 0.5); B.cap.scale.setScalar(R * 1.03);
-      B.tip.position.set(b[0].x + hx * s.r * 2.3, s.r, b[0].z + hz * s.r * 2.3); B.tip.scale.setScalar(s.r * 0.42);
-      if (full) { rx = s.tx + s.tdx * s.r * 0.7; rz = s.tz + s.tdz * s.r * 0.7; rdx = s.tdx; rdz = s.tdz; }
-      B.ring.position.set(rx, s.r, rz); B.ring.scale.setScalar(R * (full ? 1.02 : 1.12)); // still rolled up (fatter) while sliding down
-      B.ring.lookAt(rx + rdx, s.r, rz + rdz);
+      const stp = Math.max(1, Math.round(N / 60));
+      for (let i = 0; i <= cut; i += stp) pts.push(new THREE.Vector3(X(i), Y(i), Z(i)));
+      if (full) { if (cut % stp) pts.push(new THREE.Vector3(X(N - 1), Y(N - 1), Z(N - 1))); }
+      else pts.push(new THREE.Vector3(rx, ry, rz));
+      let hx = X(0) - X(Math.min(N - 1, 2)), hz = Z(0) - Z(Math.min(N - 1, 2)); { const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l; }
+      const hy = Y(0);
+      if (pts.length < 2) pts.unshift(new THREE.Vector3(X(0) + hx * 0.3, hy, Z(0) + hz * 0.3));
+      B.tube.geometry.dispose(); B.tube.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.min(120, pts.length * 3), R, 14, false);
+      B.cap.position.set(X(0) + hx * s.r * 0.5, hy, Z(0) + hz * s.r * 0.5); B.cap.scale.setScalar(R * 1.03);
+      B.tip.position.set(X(0) + hx * s.r * 2.3, hy, Z(0) + hz * s.r * 2.3); B.tip.scale.setScalar(s.r * 0.42);
+      if (full) { rx = s.tx + s.tdx * s.r * 0.7; rz = s.tz + s.tdz * s.r * 0.7; ry = Y(N - 1); rdx = s.tdx; rdz = s.tdz; }
+      B.ring.position.set(rx, ry, rz); B.ring.scale.setScalar(R * (full ? 1.02 : 1.12)); // still rolled up (fatter) while sliding down
+      B.ring.lookAt(rx + rdx, ry, rz + rdz);
       const op = Math.min(1, s.bubbleT / 1.2); // fades away over the last second
       B.g.visible = true; bubbleMat.opacity = 0.3 * op; B.ring.material.opacity = 0.6 * op;
     } else if (tv.bub) { scene.remove(tv.bub.g); tv.bub.tube.geometry.dispose(); tv.bub = null; }
