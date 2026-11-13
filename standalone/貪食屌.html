@@ -477,7 +477,7 @@ const CARDS = [
   { id: 'tissueTrail', r: 'rare', max: 1, name: '衛生紙尾跡', desc: '加速時每 3 秒在尾巴自動留下一張衛生紙', name_en: 'Tissue Trail', desc_en: 'Drop a tissue every 3s while boosting' },
   { id: 'tight', r: 'rare', max: 2, name: '緊實', desc: '被插入時有 25% 機率自動把對方擠出去', name_en: 'Tight', desc_en: '25% chance to squeeze out anyone who plugs you' },
   { id: 'autoCondom', r: 'rare', max: 1, name: '自動保險套', desc: '每 30 秒自動套上 2 秒保險套', name_en: 'Auto Condom', desc_en: 'A free 2s condom every 30s' },
-  { id: 'slippery', r: 'rare', max: 1, name: '滑溜身體', desc: '撞到別人的身體不會被推開，直接滑過去', name_en: 'Slippery', desc_en: 'Slide right through other bodies' },
+  { id: 'slippery', r: 'rare', max: 1, name: '滑溜身體', desc: '撞到別人的身體不會被推開，直接爬到他身上', name_en: 'Slippery', desc_en: 'Climb right over other snakes instead of bumping off' },
   { id: 'nineLives', r: 'legend', max: 2, name: '九命怪貓', desc: '被插入時復活一次，回到開局大小（最多同時 2 條命）', name_en: 'Nine Lives', desc_en: 'Revive once when plugged (hold up to 2)' },
   { id: 'reverse', r: 'legend', max: 1, name: '反插', desc: '被從尾巴插入時，如果你比對方粗，改成你把對方吃掉', name_en: 'Reversal', desc_en: 'If you are thicker, whoever plugs you gets eaten instead' },
   { id: 'bigOne', r: 'legend', max: 1, name: '巨根', desc: '每輪回歸時保留 25% 的長度', name_en: 'Big One', desc_en: 'Keep 25% of your length each round' },
@@ -1797,6 +1797,24 @@ function dropView(id) {
 }
 
 const LIFT = new Float32Array(MAXP), ARC = new Float32Array(MAXP), CELL = new Map();
+// 滑溜身體: where this snake lies over another snake's body, lift it to sit on top (then smooth the ramps like selfLift)
+function climbOthers(s, rp, nR, lift) {
+  let any = false;
+  for (const o of Sim.snakes) {
+    if (o === s || !o.alive || !o.body.length || Math.hypot(o.x - s.x, o.z - s.z) > s.len + o.len + 4) continue;
+    const D = s.r * 0.9 + o.r, top = o.r * 2, D2 = D * D, ob = o.body;
+    for (let i = 0; i < nR; i++) {
+      const p = rp[i]; let best = D2;
+      for (let j = 0; j < ob.length; j++) { const dx = ob[j].x - p.x, dz = ob[j].z - p.z, d2 = dx * dx + dz * dz; if (d2 < best) best = d2; }
+      if (best < D2) { const L = top * Math.sqrt(1 - best / D2) + 0.05; if (L > lift[i]) { lift[i] = L; any = true; } }
+    }
+  }
+  if (!any) return;
+  ARC[0] = 0; for (let i = 1; i < nR; i++) ARC[i] = ARC[i - 1] + Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z);
+  const k = 0.55;
+  for (let i = 1; i < nR; i++) lift[i] = Math.max(lift[i], lift[i - 1] - k * (ARC[i] - ARC[i - 1]));
+  for (let i = nR - 2; i >= 0; i--) lift[i] = Math.max(lift[i], lift[i + 1] - k * (ARC[i + 1] - ARC[i]));
+}
 function selfLift(rp, nR, r) {
   const cs = r * 2.2, gap = r * 5; // grid cell; how far apart along the body before it counts as crossing
   ARC[0] = 0; for (let i = 1; i < nR; i++) ARC[i] = ARC[i - 1] + Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z);
@@ -1935,6 +1953,7 @@ function updateView(s, v, t, me) {
     const tl = views.get(m.b.id)?.tailLift || 0, R0 = s.r * 1.6;
     for (let i = 0, a = 0; i < nR; i++) { if (i) a += Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z); const cap = tl + Math.max(0, a - R0) * 1.6; if (lift[i] > cap) lift[i] = cap; if (cap > s.r * 6) break; }
   }
+  if (mod(s, 'slippery')) climbOthers(s, rp, nR, lift); // 滑溜身體: rides up over other snakes instead of being pushed off
   v.tailLift = lift[nR - 1];
   let o = 0, h = 0, arcT = 0;
   for (let i = 1; i < nR; i++) arcT += Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z);
