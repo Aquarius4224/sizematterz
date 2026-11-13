@@ -287,8 +287,8 @@ const I18N = {
     'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.tissue': '黏到衛生紙了…變慢！',
     'toast.bubble': '鑽進保險套了！5 秒內不會被插入', 'toast.pop': '泡泡破了！', 'toast.bounceOther': '「{name}」有泡泡保護，彈開了', 'toast.bounceMe': '保險套把對方彈開了！',
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
-    'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.egg': '蛋蛋', 'item.empty': '道具格（空）',
-    'toast.gotItem': '拿到{item}了！按右下的小圓圈使用', 'toast.use.tissue': '丟下衛生紙！誰碰到誰變慢', 'toast.use.lube': '潤滑油！加速中', 'toast.use.egg': '蛋蛋！身體變大了',
+    'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.pill': '威爾鋼', 'item.empty': '道具格（空）',
+    'toast.gotItem': '拿到{item}了！按右下的小圓圈使用', 'toast.use.tissue': '丟下衛生紙！誰碰到誰變慢', 'toast.use.lube': '潤滑油！加速中', 'toast.use.pill': '威爾鋼！身體變大了',
     'tut.step': '教學 {n} / 4', 'tut.skip': '跳過教學', 'tut.done': '前往主選單', 'tut.dummy': '練習蛇', 'tut.hunter': '偷襲蛇',
     'tut.1t': '移動', 'tut.1': '在螢幕上拖曳來控制方向（電腦：方向鍵、WASD，或按住滑鼠左鍵拖曳）。試著往上、下、左、右各走一段。',
     'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：按住滑鼠右鍵或空白鍵）。加速會消耗體型喔。',
@@ -312,8 +312,8 @@ const I18N = {
     'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.tissue': 'Stuck to a tissue… slowed down!',
     'toast.bubble': 'Into the condom! Can’t be plugged for 5s', 'toast.pop': 'Popped!', 'toast.bounceOther': '{name} is wrapped up, bounced off', 'toast.bounceMe': 'Your condom bounced them off!',
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
-    'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.egg': 'Balls', 'item.empty': 'Item slot (empty)',
-    'toast.gotItem': 'Got {item}! Tap the small circle to use it', 'toast.use.tissue': 'Tissue dropped! Whoever touches it slows down', 'toast.use.lube': 'Lubed up! Speed boost', 'toast.use.egg': 'Balls! You got bigger',
+    'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.pill': 'Blue Pill', 'item.empty': 'Item slot (empty)',
+    'toast.gotItem': 'Got {item}! Tap the small circle to use it', 'toast.use.tissue': 'Tissue dropped! Whoever touches it slows down', 'toast.use.lube': 'Lubed up! Speed boost', 'toast.use.pill': 'Blue pill! You got bigger',
     'tut.step': 'Tutorial {n} / 4', 'tut.skip': 'Skip tutorial', 'tut.done': 'Main menu', 'tut.dummy': 'Dummy', 'tut.hunter': 'Sneaker',
     'tut.1t': 'Move', 'tut.1': 'Drag on the screen to steer (computer: arrow keys, WASD, or hold the left mouse button and drag). Try going up, down, left and right.',
     'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: hold the right mouse button or Space). Boosting costs you size.',
@@ -353,10 +353,10 @@ const CFG = {
   SPRAY_EMPTY: 5, SPRAY_FILL: 30, SPRAY_DT: 0.07, PUDDLE_T: 5, PUDDLE_SLOW: 0.7, SPRAY_REACH: 2, SHOWER_FAST: 1.3,
   TISSUE_T: 6, TISSUE_SLOW: 0.65, TISSUE_RESPAWN: [15, 30],
   BUBBLE_T: 5, CONDOM_WAIT: [5, 60], CONDOM_FLY: 1.1,
-  ITEM_N: 12, ITEM_RESPAWN: [3, 8], ITEM_R: 1.6, LUBE_T: 4, LUBE_FAST: 1.6, EGG_LEN: 20, EGG_R: 0.16, DROP_TISSUE_LIFE: 25,
+  ITEM_N: 12, ITEM_RESPAWN: [3, 8], ITEM_R: 1.6, LUBE_T: 4, LUBE_FAST: 1.6, PILL_LEN: 20, PILL_R: 0.16, DROP_TISSUE_LIFE: 25,
 };
 // items: picked up from the floating orbs, one held at a time, used from the small button next to the skill button
-const ITEMS = ['condom', 'tissue', 'lube', 'egg'];
+const ITEMS = ['condom', 'tissue', 'lube', 'pill'];
 // skills a player can bring into a game (AI snakes always use boost)
 const SKILLS = {
   boost: { name: '加速', cd: 0,  name_en: 'Boost', desc_en: 'Hold to speed up.', desc: '按住加速。' },
@@ -534,7 +534,7 @@ const Sim = {
       this.events.push({ type: 'useItem', a: s.id, item: it });
     }
     else if (it === 'lube') { s.lubeT = CFG.LUBE_T; this.events.push({ type: 'useItem', a: s.id, item: it }); }
-    else if (it === 'egg') { s.lenTarget = Math.min(CFG.MAX_LEN, s.lenTarget + CFG.EGG_LEN); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.EGG_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    else if (it === 'pill') { s.lenTarget = Math.min(CFG.MAX_LEN, s.lenTarget + CFG.PILL_LEN); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.PILL_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
     s.item = null;
   },
   makeFood(x, z, v) {
@@ -2305,14 +2305,13 @@ const ITEM_ICONS = (() => {
       g.fillStyle = '#ffffff'; rrect(g, 48, 54, 38, 30, 6); g.fill();
       g.fillStyle = '#2b5f86'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.fillText('LUBE', 67, 74);
       g.fillStyle = 'rgba(190,235,255,.95)'; g.beginPath(); g.moveTo(104, 26); g.quadraticCurveTo(116, 46, 104, 50); g.quadraticCurveTo(92, 46, 104, 26); g.fill(); g.stroke(); }),
-    egg: mk(g => { // two soft peach balls in one pouch, with a seam and a few wrinkles
-      const grd = g.createRadialGradient(54, 54, 8, 64, 70, 60); grd.addColorStop(0, '#ffd7bf'); grd.addColorStop(1, '#e58f6c');
-      g.fillStyle = grd; g.strokeStyle = '#a95a3c'; g.lineWidth = 5;
-      g.beginPath(); g.ellipse(44, 72, 30, 34, -0.2, 0, 6.283); g.ellipse(84, 72, 30, 34, 0.2, 0, 6.283); g.fill();
-      g.beginPath(); g.ellipse(44, 72, 30, 34, -0.2, 0, 6.283); g.stroke(); g.beginPath(); g.ellipse(84, 72, 30, 34, 0.2, 0, 6.283); g.stroke();
-      g.fillStyle = grd; g.beginPath(); g.ellipse(64, 66, 22, 30, 0, 0, 6.283); g.fill(); // smooth over the middle
-      g.strokeStyle = 'rgba(169,90,60,.6)'; g.lineWidth = 3; g.beginPath(); g.moveTo(64, 42); g.quadraticCurveTo(60, 72, 64, 104); g.stroke();
-      for (const [x, y] of [[36, 60], [90, 58], [46, 92], [82, 94]]) { g.beginPath(); g.arc(x, y, 7, 0.4, 2.2); g.stroke(); } }),
+    pill: mk(g => { // a flat blue round tablet seen at an angle: side band, top face with a score line and a shine
+      g.lineJoin = 'round'; g.strokeStyle = '#1d3f8f'; g.lineWidth = 5;
+      g.fillStyle = '#2f5fd0'; g.beginPath(); g.ellipse(64, 78, 46, 26, 0, 0, Math.PI); g.lineTo(18, 60); g.ellipse(64, 60, 46, 26, 0, Math.PI, 0, true); g.closePath(); g.fill(); g.stroke();
+      const grd = g.createLinearGradient(30, 36, 100, 86); grd.addColorStop(0, '#8fb8ff'); grd.addColorStop(1, '#4a7ff0');
+      g.fillStyle = grd; g.beginPath(); g.ellipse(64, 60, 46, 26, 0, 0, 6.283); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(29,63,143,.55)'; g.lineWidth = 4; g.beginPath(); g.moveTo(38, 66); g.lineTo(90, 54); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(48, 50, 13, 5, -0.25, 0, 6.283); g.fill(); }),
   };
 })();
 // the token inside each orb: a small solid D (white front and back, dark sides), with a black silhouette just behind it as an outline
