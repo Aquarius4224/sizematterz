@@ -361,7 +361,7 @@ const I18N = {
     'mode.classic': '經典', 'mode.classicDesc': '被插入的電腦蛇會重生，盡量長到最大。',
     'mode.br': '吃雞', 'mode.brDesc': '開場 {n} 條蛇，被插入就淘汰、不會重生，最後剩下的那一條獲勝。',
     'over.rank': '第 {rank} 名（共 {n} 條）',
-    'mode.endless': '無限', 'mode.endlessDesc': '長度到達門檻（50 起，每輪漲得更多）就從 3 張卡選 1 張，然後縮回開局大小繼續，直到被插入為止。',
+    'mode.endless': '無限', 'mode.endlessDesc': '長度到達門檻（24 起，每輪漲得更多）就從 3 張卡選 1 張，然後縮回開局大小繼續，直到被插入為止。',
     'hud.round': ' · 第 {n} 輪 · 目標 {len}', 'cards.title': '選一張卡', 'cards.sub': '到達 {len}！選一張帶進下一輪',
     'rarity.common': '一般', 'rarity.rare': '稀有', 'rarity.legend': '傳說', 'rarity.curse': '詛咒',
     'card.stack': '已有 {n} / {max}', 'card.noStack': '不可疊加', 'card.none': '無',
@@ -397,7 +397,7 @@ const I18N = {
     'mode.classic': 'Classic', 'mode.classicDesc': 'Plugged computer snakes come back. Grow as big as you can.',
     'mode.br': 'Battle Royale', 'mode.brDesc': '{n} snakes start. Get plugged and you are out for good. The last snake left wins.',
     'over.rank': 'Placed #{rank} of {n}',
-    'mode.endless': 'Endless', 'mode.endlessDesc': 'Reach the goal length (50, rising faster each round) to pick 1 of 3 cards, then shrink back and keep going until you get plugged.',
+    'mode.endless': 'Endless', 'mode.endlessDesc': 'Reach the goal length (24, rising faster each round) to pick 1 of 3 cards, then shrink back and keep going until you get plugged.',
     'hud.round': ' · Round {n} · Goal {len}', 'cards.title': 'Pick a card', 'cards.sub': 'You hit {len}! Take one into the next round',
     'rarity.common': 'COMMON', 'rarity.rare': 'RARE', 'rarity.legend': 'LEGENDARY', 'rarity.curse': 'CURSED',
     'card.stack': 'Have {n} / {max}', 'card.noStack': 'Doesn’t stack', 'card.none': 'none',
@@ -2457,7 +2457,7 @@ function updateArrows() {
 }
 
 // ---- 無限模式: reach the goal length, pick 1 of 3 cards, whip back to the start size, repeat ----
-const endlessGoal = () => Math.min(400, 50 + 10 * round + 2.5 * round * (round - 1)); // 50, 60, 75, 95, 120 … (the step grows by 5 each round)
+const endlessGoal = () => Math.min(400, 24 + 10 * round + 2.5 * round * (round - 1)); // 24, 34, 49, 69, 94 … (the step grows by 5 each round)
 const cardOf = id => CARDS.find(c => c.id === id);
 function cardAvail(c) { return c.id === 'nineLives' ? (me.mods.lives || 0) < c.max : mod(me, c.id) < c.max; }
 function drawCards() {
