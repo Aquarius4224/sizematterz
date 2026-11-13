@@ -1778,7 +1778,7 @@ function makeView(s) {
   let calyx = null;
   if (sk && sk.calyx) { calyx = new THREE.Mesh(calyxGeo, new THREE.MeshStandardMaterial({ color: sk.calyx, roughness: .55, side: THREE.DoubleSide, transparent: true })); calyx.castShadow = true; tail.add(calyx); }
   const cone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: s.isPlayer ? '#ffffff' : '#ff9f1c', transparent: true, opacity: .3, depthWrite: false }));
-  cone.position.y = 0.04;
+  cone.position.y = 0.04; cone.renderOrder = 10; // drawn after the floor's clear wet patches and ripples so it doesn't flicker
   let ring = null;
   if (s.isPlayer) { // marker under the player's head
     ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.5, 32), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .7, depthWrite: false }));
@@ -1981,7 +1981,7 @@ function updateView(s, v, t, me) {
   tbY.set(TDX, 0, TDZ); tbX.set(-TDZ, 0, TDX); tailBasis.makeBasis(tbX, tbY, tbZ); v.tail.quaternion.setFromRotationMatrix(tailBasis);
   // tail cone
   const ta = Math.atan2(s.tdz, s.tdx);
-  v.cone.position.x = s.tx; v.cone.position.z = s.tz; v.cone.rotation.y = -ta;
+  v.cone.position.set(s.tx, groundY(s.tx, s.tz) + 0.16, s.tz); v.cone.rotation.y = -ta; // above the shower's wet patches (0.09) and ripples (0.12)
   v.cone.scale.setScalar(s.r + 2.6);
   const half = CFG.CONE - (mod(s, 'tightHole') ? 0.2618 : 0) + (me && me !== s ? 0.1745 * mod(me, 'wide') : 0);
   { const g = coneGeoFor(half); if (v.cone.geometry !== g) v.cone.geometry = g; }
@@ -2703,7 +2703,7 @@ function updateTraps(dt) {
       C.wrap.position.set(c.x + Math.cos(c.dir + 1.9) * 3.2, groundY(c.x, c.z) + 0.05, c.z + Math.sin(c.dir + 1.9) * 3.2); C.wrap.rotation.y = c.dir * 2;
       if (me && me.alive && showCones) { // entry cone, like a tail's
         C.cone.visible = true; C.cone.material.color.set('#7be08a');
-        C.cone.position.set(ox, groundY(ox, oz) + 0.05, oz); C.cone.rotation.y = -c.dir; C.cone.scale.setScalar(3.4);
+        C.cone.position.set(ox, groundY(ox, oz) + 0.16, oz); C.cone.renderOrder = 10; C.cone.rotation.y = -c.dir; C.cone.scale.setScalar(3.4);
       }
     }
   }
