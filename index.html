@@ -2450,7 +2450,7 @@ let hudT = 0;
 const ARROW_AT = 10, arrowsEl = document.getElementById('arrows'), arrowPool = [], _ap = new THREE.Vector3();
 function updateArrows() {
   let used = 0;
-  const on = br && me && me.alive && running;
+  const on = (br || endless) && me && me.alive && running; // 吃雞 (at ARROW_AT or fewer) and 無限 (always: it only has 8 snakes)
   const alive = on ? Sim.snakes.filter(s => s.alive && s !== me) : [];
   if (on && alive.length + 1 <= ARROW_AT) {
     const W = window.innerWidth, H = window.innerHeight, pad = 22, cx = W / 2, cy = H / 2;
