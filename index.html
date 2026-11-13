@@ -152,6 +152,10 @@ body.tut-pulse #boost { animation: tutPulse 1.1s ease-in-out infinite; }
 .play:active { transform: translateY(2px); box-shadow: 0 2px 0 #c43858; }
 .play:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
 .menu { gap: 12px; }
+.refs { display: grid; gap: 12px; text-align: left; }
+.refs h3 { margin: 0 0 2px !important; }
+.refs p { font-size: 14px !important; }
+.refs a { color: var(--pop); }
 #startOv .card.menu { position: relative; }
 .gear { position: absolute; top: 10px; right: 10px; width: 42px; height: 42px; border: 0; border-radius: 50%; background: var(--lagoon); color: var(--ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.12); }
 .gear svg { width: 24px; height: 24px; max-width: none; }
@@ -297,6 +301,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
       <button class="opt" id="muteBtn" aria-pressed="true"><b><span data-i18n="set.music">音樂</span><span id="muteState"></span></b></button>
       <button class="opt" id="langBtn"><b><span data-i18n="set.lang">語言 Language</span><span data-i18n="set.langName">中文</span></b></button>
       <button class="opt" id="coneOpt"><b><span data-i18n="set.cone">判定範圍</span><span id="coneState"></span></b><p data-i18n="set.coneDesc">在每條蛇的尾巴後方顯示可以插入的扇形範圍。</p></button>
+      <button class="opt" id="refBtn"><b><span data-i18n="set.ref">參考資料 Reference</span><span>›</span></b><p data-i18n="set.refDesc">遊戲裡用到的音樂、程式庫、字型和美術。</p></button>
     </div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
@@ -307,6 +312,19 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <h2 id="cardTitle" data-i18n="cards.title">選一張卡</h2>
     <p class="statline" id="cardSub"></p>
     <div class="cards3" id="cardRow"></div>
+  </div>
+</div>
+
+<div class="overlay" id="refOv" hidden>
+  <div class="card scroll">
+    <h2 data-i18n="ref.title">參考資料</h2>
+    <div class="refs">
+      <div><h3 data-i18n="ref.music">音樂</h3><p>“Bit Shift” — Kevin MacLeod (<a href="https://incompetech.com" target="_blank" rel="noopener">incompetech.com</a>)<br><span data-i18n="ref.musicLic">授權</span>：<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons BY 4.0</a></p></div>
+      <div><h3 data-i18n="ref.engine">3D 引擎</h3><p><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> r128 — MIT License</p></div>
+      <div><h3 data-i18n="ref.font">字型</h3><p><a href="https://fonts.google.com/specimen/Fredoka" target="_blank" rel="noopener">Fredoka</a> (Google Fonts) — SIL Open Font License 1.1</p></div>
+      <div><h3 data-i18n="ref.art">美術與設計</h3><p data-i18n="ref.artDesc">標題圖、道具 D 圖案、尾巴模型和地圖設計為本作原創。花紋造型由程式產生。</p></div>
+    </div>
+    <button class="back" id="refBack" data-i18n="back">‹ 返回</button>
   </div>
 </div>
 
@@ -357,7 +375,7 @@ const I18N = {
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
     'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.pill': '威爾鋼', 'item.empty': '道具格（空）',
     'toast.gotItem': '拿到{item}了！按右下的小圓圈使用', 'toast.use.tissue': '丟下衛生紙！誰碰到誰變慢', 'toast.use.lube': '潤滑油！加速中', 'toast.use.pill': '威爾鋼！身體變大了',
-    'menu.settings': 'SETTINGS', 'menu.settingsSub': '設定', 'set.title': '設定', 'set.cone': '判定範圍', 'set.coneDesc': '在每條蛇的尾巴後方顯示可以插入的扇形範圍。', 'set.on': '開', 'set.off': '關', 'set.music': '音樂', 'set.lang': '語言 Language', 'set.langName': '中文',
+    'menu.settings': 'SETTINGS', 'menu.settingsSub': '設定', 'set.title': '設定', 'set.cone': '判定範圍', 'set.coneDesc': '在每條蛇的尾巴後方顯示可以插入的扇形範圍。', 'set.on': '開', 'set.off': '關', 'set.music': '音樂', 'set.ref': '參考資料 Reference', 'set.refDesc': '遊戲裡用到的音樂、程式庫、字型和美術。', 'ref.title': '參考資料', 'ref.music': '音樂', 'ref.musicLic': '授權', 'ref.engine': '3D 引擎', 'ref.font': '字型', 'ref.art': '美術與設計', 'ref.artDesc': '標題圖、道具 D 圖案、尾巴模型和地圖設計為本作原創。花紋造型由程式產生。', 'set.lang': '語言 Language', 'set.langName': '中文',
     'tut.step': '教學 {n} / 4', 'tut.skip': '跳過教學', 'tut.done': '前往主選單', 'tut.dummy': '練習蛇', 'tut.hunter': '偷襲蛇',
     'tut.1t': '移動', 'tut.1': '在螢幕上拖曳來控制方向（電腦：方向鍵、WASD，或按住滑鼠左鍵拖曳）。試著往上、下、左、右各走一段。',
     'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：按住滑鼠右鍵或空白鍵）。加速會消耗體型喔。',
@@ -393,7 +411,7 @@ const I18N = {
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
     'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.pill': 'Blue Pill', 'item.empty': 'Item slot (empty)',
     'toast.gotItem': 'Got {item}! Tap the small circle to use it', 'toast.use.tissue': 'Tissue dropped! Whoever touches it slows down', 'toast.use.lube': 'Lubed up! Speed boost', 'toast.use.pill': 'Blue pill! You got bigger',
-    'menu.settings': 'SETTINGS', 'menu.settingsSub': '', 'set.title': 'Settings', 'set.cone': 'Hit zone', 'set.coneDesc': 'Show the fan behind each snake’s tail where you can plug it.', 'set.on': 'On', 'set.off': 'Off', 'set.music': 'Music', 'set.lang': 'Language 語言', 'set.langName': 'English',
+    'menu.settings': 'SETTINGS', 'menu.settingsSub': '', 'set.title': 'Settings', 'set.cone': 'Hit zone', 'set.coneDesc': 'Show the fan behind each snake’s tail where you can plug it.', 'set.on': 'On', 'set.off': 'Off', 'set.music': 'Music', 'set.ref': 'Reference 參考資料', 'set.refDesc': 'Music, libraries, fonts and art used in the game.', 'ref.title': 'Reference', 'ref.music': 'Music', 'ref.musicLic': 'License', 'ref.engine': '3D engine', 'ref.font': 'Font', 'ref.art': 'Art & design', 'ref.artDesc': 'The title art, the D item token, the tail model and the map designs are original to this game. Pattern skins are generated in code.', 'set.lang': 'Language 語言', 'set.langName': 'English',
     'tut.step': 'Tutorial {n} / 4', 'tut.skip': 'Skip tutorial', 'tut.done': 'Main menu', 'tut.dummy': 'Dummy', 'tut.hunter': 'Sneaker',
     'tut.1t': 'Move', 'tut.1': 'Drag on the screen to steer (computer: arrow keys, WASD, or hold the left mouse button and drag). Try going up, down, left and right.',
     'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: hold the right mouse button or Space). Boosting costs you size.',
@@ -2053,7 +2071,7 @@ const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { 
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
 try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
-const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), set: document.getElementById('setOv') };
+const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), set: document.getElementById('setOv'), ref: document.getElementById('refOv') };
 const showOv = name => { for (const k in ovs) ovs[k].hidden = k !== name; if (name === 'start' && typeof BGM !== 'undefined') BGM.scene('menu'); };
 function renderMenus() {
   const bgOf = settings.pattern ? skinThumb(settings.pattern) : settings.color;
@@ -2106,6 +2124,8 @@ const drawConeOpt = () => { coneOpt.setAttribute('aria-pressed', String(showCone
 coneOpt.addEventListener('click', () => { showCones = settings.cones = !showCones; saveSettings(); drawConeOpt(); });
 drawConeOpt();
 document.getElementById('setBtn').addEventListener('click', () => showOv('set'));
+document.getElementById('refBtn').addEventListener('click', () => showOv('ref'));
+document.getElementById('refBack').addEventListener('click', () => showOv('set'));
 
 /* =====================================================================
    GAME LOOP
