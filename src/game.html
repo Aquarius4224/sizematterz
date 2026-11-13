@@ -38,6 +38,9 @@ body {
   background: var(--glass); border-radius: 14px; padding: 8px 10px; min-width: 120px;
   font-size: 13px; font-variant-numeric: tabular-nums; box-shadow: 0 2px 10px rgba(0,0,0,.12);
 }
+#arrows { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+#arrows .arw { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; will-change: transform; }
+#arrows .arw svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
 #board .title { font-size: 11px; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 4px; }
 #board .row { display: grid; grid-template-columns: 12px 1fr auto; gap: 6px; align-items: center; padding: 1px 0; }
 #board .row.me { font-weight: 700; }
@@ -166,7 +169,7 @@ body.tut-pulse #boost { animation: tutPulse 1.1s ease-in-out infinite; }
 .credit { font-size: 11px; color: var(--ink-soft); opacity: .7; margin: 4px 0 0; }
 .back { border: 0; background: none; font-family: var(--font-display); font-size: 16px; color: var(--ink-soft); cursor: pointer; padding: 6px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.statline { font-family: var(--font-display); font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.statline { white-space: pre-line; font-family: var(--font-display); font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 #titleOv { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; cursor: pointer;
   background: radial-gradient(ellipse at 50% 45%, rgba(40, 20, 70, .55), rgba(10, 6, 24, .82)); transition: opacity .5s ease; }
@@ -195,7 +198,8 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
   <div class="small" data-i18n="hud.len">長度</div><div class="big" id="sLen">8.0</div>
   <div class="small" id="sMore">粗細 0.60 · 插入 0</div>
 </div>
-<div class="hud" id="board"><div class="title" data-i18n="hud.board">排行</div><div id="boardRows"></div></div>
+<div class="hud" id="board"><div class="title"><span data-i18n="hud.board">排行</span><span id="aliveN"></span></div><div id="boardRows"></div></div>
+<div id="arrows" aria-hidden="true"></div>
 <div class="hud" id="toast"></div>
 <div id="joy" hidden><div class="knob" id="knob"></div></div>
 <button class="btn" id="itemBtn" aria-label="item" disabled><img id="itemImg" alt="" hidden></button>
@@ -214,6 +218,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <button class="play big" id="startBtn" data-i18n="menu.start">START</button>
     <button class="sub" id="skinBtn"><span data-i18n="menu.skin">SKIN</span> <small><span data-i18n="menu.skinSub">造型</span> <span class="dot" id="skinDot"></span></small></button>
     <button class="sub" id="skillBtn"><span data-i18n="menu.skill">SKILL</span> <small id="skillName">技能</small></button>
+    <button class="sub" id="modeBtn"><span data-i18n="menu.mode">MODE</span> <small id="modeName">模式</small></button>
     <button class="sub" id="mapBtn"><span data-i18n="menu.map">MAP</span> <small id="mapName">地圖</small></button>
     <button class="sub" id="setBtn"><span data-i18n="menu.settings">SETTINGS</span> <small data-i18n="menu.settingsSub">設定</small></button>
     <button class="back" id="tutBtn" data-i18n="menu.tut">再看一次教學</button>
@@ -241,6 +246,14 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <h2 data-i18n="skill.title">選擇技能</h2>
     <p data-i18n="skill.help">選一個帶進遊戲，用右下角的技能鍵發動。</p>
     <div class="opts" id="skillOpts"></div>
+    <button class="back" data-back data-i18n="back">‹ 返回</button>
+  </div>
+</div>
+
+<div class="overlay" id="modeOv" hidden>
+  <div class="card scroll">
+    <h2 data-i18n="mode.title">選擇模式</h2>
+    <div class="opts" id="modeOpts"></div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
 </div>
@@ -286,6 +299,10 @@ const I18N = {
     'skin.title': '選擇造型', 'skin.basic': '基本顏色', 'skin.pattern': '花紋', 'back': '‹ 返回', 'aria.color': '顏色 {c}',
     'skill.title': '選擇技能', 'skill.help': '選一個帶進遊戲，用右下角的技能鍵發動。', 'skill.auto': '自動 · ', 'skill.cd': '冷卻 {n} 秒', 'skill.hold': '按住使用',
     'map.title': '選擇地圖',
+    'menu.mode': 'MODE', 'menu.modeSub': '模式 · {name}', 'mode.title': '選擇模式', 'hud.alive': ' · 剩 {n} 條',
+    'mode.classic': '經典', 'mode.classicDesc': '被插入的電腦蛇會重生，盡量長到最大。',
+    'mode.br': '吃雞', 'mode.brDesc': '開場 {n} 條蛇，被插入就淘汰、不會重生，最後剩下的那一條獲勝。',
+    'over.rank': '第 {rank} 名（共 {n} 條）', 'win.title': '🏆 大吉大利，今晚吃雞！', 'win.stats': '你是最後剩下的一條 · 長度 {len} · 插入 {n} 條',
     'over.title': '你被插入了', 'over.by': '你被「{name}」從尾巴插入了', 'over.stats': '最長 {len} · 插入 {n} 條', 'over.menu': '主選單', 'over.again': '再來一局',
     'toast.ouroHint': '把頭繞進自己的尾巴就會發動', 'toast.enter': '進入「{name}」了！',
     'toast.enteredGuard': '被「{name}」進入了！快按縮緊或進入別人的尾巴把牠擠出去', 'toast.entered': '被「{name}」進入了！快進入別人的尾巴把牠擠出去',
@@ -312,6 +329,10 @@ const I18N = {
     'skin.title': 'Choose a skin', 'skin.basic': 'Colours', 'skin.pattern': 'Patterns', 'back': '‹ Back', 'aria.color': 'Colour {c}',
     'skill.title': 'Choose a skill', 'skill.help': 'Pick one to bring into the game. Use it with the skill button at the bottom right.', 'skill.auto': 'Auto · ', 'skill.cd': 'Cooldown {n}s', 'skill.hold': 'Hold to use',
     'map.title': 'Choose a map',
+    'menu.mode': 'MODE', 'menu.modeSub': '{name}', 'mode.title': 'Choose a mode', 'hud.alive': ' · {n} left',
+    'mode.classic': 'Classic', 'mode.classicDesc': 'Plugged computer snakes come back. Grow as big as you can.',
+    'mode.br': 'Battle Royale', 'mode.brDesc': '{n} snakes start. Get plugged and you are out for good. The last snake left wins.',
+    'over.rank': 'Placed #{rank} of {n}', 'win.title': '🏆 Winner winner!', 'win.stats': 'Last snake standing · Length {len} · Plugged {n}',
     'over.title': 'You got plugged', 'over.by': '{name} plugged you from behind', 'over.stats': 'Longest {len} · Plugged {n}', 'over.menu': 'Main menu', 'over.again': 'Play again',
     'toast.ouroHint': 'Loop your head into your own tail to trigger it', 'toast.enter': 'You’re in {name}!',
     'toast.enteredGuard': '{name} got in you! Clench, or get into someone’s tail to push it out', 'toast.entered': '{name} got in you! Get into someone’s tail to push it out',
@@ -351,7 +372,8 @@ const CFG = {
   S: 0.5,             // trail sample spacing
   START_LEN: 8, START_R: 0.6,
   MAX_LEN: 200, MAX_R: 3.2,
-  FOOD: 0, AI: 7, // no food any more: snakes grow by plugging others and from 蛋蛋 items
+  FOOD: 0, AI: 7, BR_N: 24, // 吃雞 mode: snakes at the start, player included
+  // no food any more: snakes grow by plugging others and from 蛋蛋 items
   CONE: Math.PI / 4,  // absorb cone half-angle behind the tail
   SPEED: 7.5, BOOST: 13, TURN: 4.2,
   BOOST_LEN: 3.2, BOOST_THIN: 0.024, // per second of boosting: length lost, radius lost
@@ -1856,10 +1878,12 @@ function updateSkillBtn() {
 
 // ---- menus: start / skin / skill (choices remembered on this device) ----
 const SKINS = ['#ff5a7a', ...COLORS];
-const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', lang };
-try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
+const MODES = ['classic', 'br']; // 經典 / 吃雞 (last snake standing, no respawns)
+const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: CFG.BR_N });
+const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
+try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
-const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), set: document.getElementById('setOv') };
+const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), set: document.getElementById('setOv') };
 const showOv = name => { for (const k in ovs) ovs[k].hidden = k !== name; if (name === 'start' && typeof BGM !== 'undefined') BGM.scene('menu'); };
 function renderMenus() {
   const bgOf = settings.pattern ? skinThumb(settings.pattern) : settings.color;
@@ -1871,6 +1895,8 @@ function renderMenus() {
   for (const b of document.querySelectorAll('#skillOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.k === settings.skill));
   for (const b of document.querySelectorAll('#mapOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.map));
   document.getElementById('mapName').textContent = T('menu.mapSub', { name: L(MAPS[settings.map], 'name') });
+  for (const b of document.querySelectorAll('#modeOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.mode));
+  document.getElementById('modeName').textContent = T('menu.modeSub', { name: modeName(settings.mode) });
   updateSkillBtn();
 }
 function buildMenus() {
@@ -1889,6 +1915,10 @@ function buildMenus() {
   for (const id in MAPS) { const m = MAPS[id], b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${L(m, 'name')}</b><p>${L(m, 'desc')}</p>`;
     b.addEventListener('click', () => { settings.map = id; saveSettings(); renderMenus(); if (!running && !tut) startAttract(); }); mo.appendChild(b); }
+  const md = document.getElementById('modeOpts'); md.innerHTML = '';
+  for (const id of MODES) { const b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
+    b.innerHTML = `<b>${modeName(id)}</b><p>${modeDesc(id)}</p>`;
+    b.addEventListener('click', () => { settings.mode = id; saveSettings(); renderMenus(); }); md.appendChild(b); }
 }
 buildMenus();
 document.getElementById('langBtn').addEventListener('click', () => {
@@ -1896,6 +1926,7 @@ document.getElementById('langBtn').addEventListener('click', () => {
   applyStatic(); buildMenus(); renderMenus(); drawConeOpt(); if (typeof BGM !== 'undefined') BGM.redraw();
 });
 document.getElementById('mapBtn').addEventListener('click', () => showOv('map'));
+document.getElementById('modeBtn').addEventListener('click', () => showOv('mode'));
 document.getElementById('skinBtn').addEventListener('click', () => showOv('skin'));
 document.getElementById('skillBtn').addEventListener('click', () => showOv('skill'));
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', () => showOv('start'));
@@ -1909,7 +1940,7 @@ document.getElementById('setBtn').addEventListener('click', () => showOv('set'))
 /* =====================================================================
    GAME LOOP
    ===================================================================== */
-let me = null, running = false, camFollow = null, gen = 0;
+let me = null, running = false, camFollow = null, gen = 0, br = false, brN = 0;
 const camPos = new THREE.Vector3(0, 40, 30), camLook = new THREE.Vector3();
 const toastEl = document.getElementById('toast'); let toastT = 0;
 function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); toastT = 1.4; }
@@ -1923,7 +1954,8 @@ function newGame() {
   Sim.reset();
   Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern;
   me = Sim.addSnake(true);
-  for (let i = 0; i < CFG.AI; i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
+  br = settings.mode === 'br'; brN = br ? CFG.BR_N : 0;
+  for (let i = 0; i < (br ? CFG.BR_N - 1 : CFG.AI); i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   camFollow = me; running = true;
   document.getElementById('overOv').hidden = true;
   camPos.set(me.x, 40, me.z + 30);
@@ -2178,27 +2210,64 @@ function handleEvents() {
     if (B === me) {
       running = false; camFollow = A;
       document.getElementById('overTitle').textContent = T('over.by', { name: nameOf(A) });
-      document.getElementById('overStats').textContent = T('over.stats', { len: me.bestLen.toFixed(1), n: me.absorbed });
+      document.getElementById('overStats').textContent = T('over.stats', { len: me.bestLen.toFixed(1), n: me.absorbed })
+        + (br ? '\n' + T('over.rank', { rank: Sim.snakes.filter(s => s.alive).length + 1, n: brN }) : '');
       setTimeout(() => { document.getElementById('overOv').hidden = false; }, 900);
     }
     const g0 = gen;
-    if (!B.isPlayer) setTimeout(() => { // keep the arena populated
+    if (!B.isPlayer) setTimeout(() => { // classic: keep the arena populated; 吃雞: the plugged snake is out for good
       if (g0 !== gen) return;
       Sim.snakes = Sim.snakes.filter(s => s !== B);
-      Sim.addSnake(false, null, pickAILook(Sim.snakes));
+      if (!br) Sim.addSnake(false, null, pickAILook(Sim.snakes));
     }, 2500);
+    if (br && running && me.alive && Sim.snakes.filter(s => s.alive).length === 1) { // 吃雞: the player is the last one left
+      running = false;
+      document.getElementById('overTitle').textContent = T('win.title');
+      document.getElementById('overStats').textContent = T('win.stats', { len: me.bestLen.toFixed(1), n: me.absorbed });
+      setTimeout(() => { document.getElementById('overOv').hidden = false; }, 1200);
+    }
   }
   Sim.events.length = 0;
 }
 
 const sLen = document.getElementById('sLen'), sMore = document.getElementById('sMore'), boardRows = document.getElementById('boardRows');
 let hudT = 0;
+// 吃雞: once ARROW_AT snakes or fewer are left, arrows on the screen edge point at every snake that is off screen
+const ARROW_AT = 10, arrowsEl = document.getElementById('arrows'), arrowPool = [], _ap = new THREE.Vector3();
+function updateArrows() {
+  let used = 0;
+  const on = br && me && me.alive && running;
+  const alive = on ? Sim.snakes.filter(s => s.alive && s !== me) : [];
+  if (on && alive.length + 1 <= ARROW_AT) {
+    const W = window.innerWidth, H = window.innerHeight, pad = 22, cx = W / 2, cy = H / 2;
+    for (const s of alive) {
+      _ap.set(s.x, s.r, s.z).project(camera);
+      let nx = _ap.x, ny = -_ap.y;
+      const behind = _ap.z > 1;
+      if (behind) { nx = -nx; ny = -ny; }
+      if (!behind && Math.abs(nx) <= 1 && Math.abs(ny) <= 1) continue; // already on screen
+      let dx = nx * cx, dy = ny * cy; if (Math.hypot(dx, dy) < 1e-3) dy = 1;
+      const k = Math.min((cx - pad) / Math.abs(dx || 1e-6), (cy - pad) / Math.abs(dy || 1e-6));
+      const x = cx + dx * k, y = cy + dy * k, a = Math.atan2(dy, dx);
+      let el = arrowPool[used];
+      if (!el) { el = document.createElement('div'); el.className = 'arw';
+        el.innerHTML = '<svg viewBox="0 0 26 26"><path d="M24 13 L5 3 L9 13 L5 23 Z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>';
+        arrowsEl.appendChild(el); arrowPool.push(el); }
+      el.style.display = ''; el.querySelector('path').setAttribute('fill', s.color);
+      el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${a.toFixed(3)}rad)`;
+      used++;
+    }
+  }
+  for (let i = used; i < arrowPool.length; i++) arrowPool[i].style.display = 'none';
+}
+
 function updateHud() {
   if (me) {
     me.bestLen = Math.max(me.bestLen || 0, me.len);
     sLen.textContent = me.len.toFixed(1);
     sMore.textContent = T('hud.more', { r: me.r.toFixed(2), n: me.absorbed });
   }
+  document.getElementById('aliveN').textContent = br && me ? T('hud.alive', { n: Sim.snakes.filter(s => s.alive).length }) : '';
   const top = Sim.snakes.filter(s => s.alive).sort((a, b) => b.len - a.len).slice(0, 5);
   boardRows.innerHTML = top.map(s => `<div class="row${s.isPlayer ? ' me' : ''}"><span class="dot" style="background:${s.color}"></span><span>${nameOf(s)}</span><span>${s.len.toFixed(0)}</span></div>`).join('');
 }
@@ -2268,6 +2337,7 @@ function frame(now) {
   hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHud(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.classList.remove('show'); }
   renderer.render(scene, camera);
+  updateArrows();
 }
 
 // ---- bedroom traps: crumpled tissues, the condom (on the floor / flying from the bed) and the bubble it puts around a snake ----
@@ -2497,6 +2567,7 @@ function tutShow(n, title, text, extra) {
   tutBox.hidden = false;
 }
 function startTutorial() {
+  br = false;
   gen++;
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
@@ -2579,6 +2650,7 @@ document.getElementById('tutBtn').addEventListener('click', startTutorial);
 
 // attract mode behind the start card: AI-only arena
 function startAttract() {
+  br = false;
   gen++;
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
