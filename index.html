@@ -71,6 +71,15 @@ body {
   height: 40px; padding: 0 14px; border-radius: 20px; font-size: 13px;
 }
 #coneBtn[aria-pressed="false"] { opacity: .6; }
+#itemBtn { /* the item slot: a small circle (half the skill button) beside it */
+  right: calc(96px + env(safe-area-inset-right, 0px)); bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  width: 42px; height: 42px; border-radius: 50%; padding: 0; display: grid; place-items: center; overflow: hidden;
+}
+#itemBtn img { width: 34px; height: 34px; pointer-events: none; }
+#itemBtn:disabled { cursor: default; }
+#itemBtn.full { box-shadow: 0 0 0 3px var(--sun), 0 3px 12px rgba(0,0,0,.18); animation: itemPop .35s ease-out; }
+@keyframes itemPop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: none; } }
+body.tut #itemBtn { display: none; }
 #joy {
   position: fixed; z-index: 4; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
   background: rgba(18,52,58,.12); border: 2px solid rgba(18,52,58,.35); pointer-events: none;
@@ -202,6 +211,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 <div class="hud" id="toast"></div>
 <div id="joy" hidden><div class="knob" id="knob"></div></div>
 <button class="btn" id="coneBtn" aria-pressed="true" data-i18n="btn.cone">判定範圍</button>
+<button class="btn" id="itemBtn" aria-label="item" disabled><img id="itemImg" alt="" hidden></button>
 <button class="btn" id="boost"><span class="lbl" id="skillLbl">加速</span><span class="cd" id="skillCd"></span></button>
 
 <div id="tutBox" hidden>
@@ -290,6 +300,8 @@ const I18N = {
     'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.tissue': '黏到衛生紙了…變慢！',
     'toast.bubble': '鑽進保險套了！5 秒內不會被插入', 'toast.pop': '泡泡破了！', 'toast.bounceOther': '「{name}」有泡泡保護，彈開了', 'toast.bounceMe': '保險套把對方彈開了！',
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
+    'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.egg': '蛋蛋', 'item.empty': '道具格（空）',
+    'toast.gotItem': '拿到{item}了！按右下的小圓圈使用', 'toast.use.tissue': '丟下衛生紙！誰碰到誰變慢', 'toast.use.lube': '潤滑油！加速中', 'toast.use.egg': '蛋蛋！身體變大了',
     'tut.step': '教學 {n} / 4', 'tut.skip': '跳過教學', 'tut.done': '前往主選單', 'tut.dummy': '練習蛇', 'tut.hunter': '偷襲蛇',
     'tut.1t': '移動', 'tut.1': '在螢幕上拖曳來控制方向（電腦：方向鍵、WASD，或按住滑鼠左鍵拖曳）。試著往上、下、左、右各走一段。',
     'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：按住滑鼠右鍵或空白鍵）。加速會消耗體型喔。',
@@ -313,6 +325,8 @@ const I18N = {
     'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.tissue': 'Stuck to a tissue… slowed down!',
     'toast.bubble': 'Into the condom! Can’t be plugged for 5s', 'toast.pop': 'Popped!', 'toast.bounceOther': '{name} is wrapped up, bounced off', 'toast.bounceMe': 'Your condom bounced them off!',
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
+    'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.egg': 'Balls', 'item.empty': 'Item slot (empty)',
+    'toast.gotItem': 'Got {item}! Tap the small circle to use it', 'toast.use.tissue': 'Tissue dropped! Whoever touches it slows down', 'toast.use.lube': 'Lubed up! Speed boost', 'toast.use.egg': 'Balls! You got bigger',
     'tut.step': 'Tutorial {n} / 4', 'tut.skip': 'Skip tutorial', 'tut.done': 'Main menu', 'tut.dummy': 'Dummy', 'tut.hunter': 'Sneaker',
     'tut.1t': 'Move', 'tut.1': 'Drag on the screen to steer (computer: arrow keys, WASD, or hold the left mouse button and drag). Try going up, down, left and right.',
     'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: hold the right mouse button or Space). Boosting costs you size.',
@@ -343,7 +357,7 @@ const CFG = {
   S: 0.5,             // trail sample spacing
   START_LEN: 8, START_R: 0.6,
   MAX_LEN: 200, MAX_R: 3.2,
-  FOOD: 680, AI: 7, // food keeps the old density on the 2x rooms
+  FOOD: 0, AI: 7, // no food any more: snakes grow by plugging others and from 蛋蛋 items
   CONE: Math.PI / 4,  // absorb cone half-angle behind the tail
   SPEED: 7.5, BOOST: 13, TURN: 4.2,
   BOOST_LEN: 3.2, BOOST_THIN: 0.024, // per second of boosting: length lost, radius lost
@@ -352,7 +366,10 @@ const CFG = {
   SPRAY_EMPTY: 5, SPRAY_FILL: 30, SPRAY_DT: 0.07, PUDDLE_T: 5, PUDDLE_SLOW: 0.7, SPRAY_REACH: 2, SHOWER_FAST: 1.3,
   TISSUE_T: 6, TISSUE_SLOW: 0.65, TISSUE_RESPAWN: [15, 30],
   BUBBLE_T: 5, CONDOM_WAIT: [5, 60], CONDOM_FLY: 1.1,
+  ITEM_N: 12, ITEM_RESPAWN: [3, 8], ITEM_R: 1.6, LUBE_T: 4, LUBE_FAST: 1.6, EGG_LEN: 20, EGG_R: 0.16, DROP_TISSUE_LIFE: 25,
 };
+// items: picked up from the floating orbs, one held at a time, used from the small button next to the skill button
+const ITEMS = ['condom', 'tissue', 'lube', 'egg'];
 // skills a player can bring into a game (AI snakes always use boost)
 const SKILLS = {
   boost: { name: '加速', cd: 0,  name_en: 'Boost', desc_en: 'Hold to speed up.', desc: '按住加速。' },
@@ -489,6 +506,49 @@ const Sim = {
     if (MAP.tissues) for (let i = 0; i < MAP.tissues.n; i++) this.spawnTissue();
     this.condom = MAP.condom ? { phase: 'wait', t: rnd(4, 15), seq: 0 } : null;
     for (let i = 0; i < CFG.FOOD; i++) this.food.push(this.makeFood());
+    this.orbs = []; this.orbSeq = 0; this.orbWait = [];
+    for (let i = 0; i < CFG.ITEM_N; i++) this.spawnOrb();
+  },
+  // ---- item orbs ----
+  spawnOrb() {
+    for (let k = 0; k < 40; k++) {
+      const p = randomFree(3);
+      if (this.snakes.every(s => !s.alive || Math.hypot(s.x - p.x, s.z - p.z) > 6) && this.orbs.every(o => Math.hypot(o.x - p.x, o.z - p.z) > 10)) { this.orbs.push({ id: ++this.orbSeq, x: p.x, z: p.z, ph: rnd(0, 6.28) }); return; }
+    }
+  },
+  stepItems(dt, alive) {
+    if (this.noFood) { this.orbs.length = 0; this.orbWait.length = 0; return; } // tutorial: no orbs
+    for (const w of this.orbWait) w.t -= dt;
+    while (this.orbWait.length && this.orbWait[0].t <= 0) { this.orbWait.shift(); this.spawnOrb(); }
+    for (const s of alive) {
+      if (s.item || s.merge || s.still) continue; // one item at a time
+      const rr = s.r + CFG.ITEM_R;
+      const i = this.orbs.findIndex(o => (s.x - o.x) ** 2 + (s.z - o.z) ** 2 < rr * rr);
+      if (i < 0) continue;
+      const o = this.orbs[i]; this.orbs.splice(i, 1);
+      this.orbWait.push({ t: rnd(...CFG.ITEM_RESPAWN) }); this.orbWait.sort((a, b) => a.t - b.t);
+      s.item = ITEMS[(Math.random() * ITEMS.length) | 0]; s.aiItemT = rnd(1, 5);
+      this.events.push({ type: 'item', a: s.id, item: s.item, x: o.x, z: o.z });
+    }
+    for (const s of alive) { // computer snakes use what they hold after a moment (a condom right away if someone is behind them)
+      if (!s.ai || !s.item) continue;
+      s.aiItemT -= dt;
+      const threat = s.item === 'condom' && this.snakes.some(o => o !== s && o.alive && Math.hypot(o.x - s.tx, o.z - s.tz) < 8);
+      if (s.aiItemT <= 0 || threat) this.useItem(s);
+    }
+  },
+  useItem(s) {
+    const it = s.item; if (!it || !s.alive || (s.merge && s.merge.a === s)) return;
+    if (it === 'condom') { if (s.bubbleT > 0) return; s.bubbleT = CFG.BUBBLE_T; s.bubbleLen = s.lenTarget; s.bubbleCov = 0; this.events.push({ type: 'bubble', a: s.id }); }
+    else if (it === 'tissue') { // left on the floor just behind the tail; it slows whoever else touches it
+      const g = s.r + 1.6; let x = s.tx + s.tdx * g, z = s.tz + s.tdz * g;
+      if (!mapFree(x, z, 0.8)) { x = s.tx; z = s.tz; }
+      this.tissues.push({ id: ++this.tissueSeq, x, z, alive: true, t: 0, rot: rnd(0, 6.28), owner: s.id, dropped: true, life: CFG.DROP_TISSUE_LIFE });
+      this.events.push({ type: 'useItem', a: s.id, item: it });
+    }
+    else if (it === 'lube') { s.lubeT = CFG.LUBE_T; this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    else if (it === 'egg') { s.lenTarget = Math.min(CFG.MAX_LEN, s.lenTarget + CFG.EGG_LEN); s.rTarget = Math.min(CFG.MAX_R, s.rTarget + CFG.EGG_R); s.pulse = 1; this.events.push({ type: 'useItem', a: s.id, item: it }); }
+    s.item = null;
   },
   makeFood(x, z, v) {
     if (x === undefined) { const p = randomFree(1.2); x = p.x; z = p.z; }
@@ -518,7 +578,7 @@ const Sim = {
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) / (1 + (s.r - CFG.START_R) * 0.22) * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? CFG.PUDDLE_SLOW : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? CFG.TISSUE_SLOW : 1) * (s.speedK || 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) / (1 + (s.r - CFG.START_R) * 0.22) * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? CFG.PUDDLE_SLOW : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? CFG.TISSUE_SLOW : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
@@ -631,10 +691,11 @@ const Sim = {
   stepTraps(dt, alive) {
     // tissues: touching one sticks bits of it to you for a while (slower)
     for (const o of this.tissues) {
-      if (!o.alive) { o.t -= dt; if (o.t <= 0) { o.dead = true; this.spawnTissue(); } continue; }
+      if (!o.alive) { o.t -= dt; if (o.t <= 0) { o.dead = true; if (!o.dropped) this.spawnTissue(); } continue; }
+      if (o.dropped && (o.life -= dt) <= 0) { o.alive = false; o.t = 0; continue; }
       for (const s of alive) {
-        if (s.merge || Math.hypot(s.x - o.x, s.z - o.z) > s.r * 1.2 + 0.9) continue;
-        o.alive = false; o.t = rnd(...CFG.TISSUE_RESPAWN);
+        if (s.merge || s.id === o.owner || Math.hypot(s.x - o.x, s.z - o.z) > s.r * 1.2 + 0.9) continue; // your own dropped tissue never slows you
+        o.alive = false; o.t = o.dropped ? 0 : rnd(...CFG.TISSUE_RESPAWN);
         s.tissueT = CFG.TISSUE_T; s.tissueBits = Array.from({ length: 3 + ((Math.random() * 3) | 0) }, () => ({ f: rnd(0.08, 0.92), a: rnd(0.2, 2.9), s: rnd(0.7, 1.2), rot: rnd(0, 6.28) }));
         this.events.push({ type: 'tissue', a: s.id, x: o.x, z: o.z }); break;
       }
@@ -663,6 +724,7 @@ const Sim = {
   },
   stepBubble(s, dt) {
     if (s.tissueT > 0) s.tissueT = Math.max(0, s.tissueT - dt);
+    if (s.lubeT > 0) s.lubeT = Math.max(0, s.lubeT - dt);
     if (!(s.bubbleT > 0)) return;
     if (s.lenTarget > s.bubbleLen + 0.3) { s.bubbleT = 0; this.events.push({ type: 'pop', a: s.id, x: s.x, z: s.z }); return; } // grew: it bursts
     s.bubbleCov = (s.bubbleCov || 0) + this.speedOf(s) * dt; // how far the sheath has slid back along the body (it stays put on the floor while the snake pushes through)
@@ -685,6 +747,7 @@ const Sim = {
         s.boost = s.skill === 'boost' && inp.boost && s.lenTarget > CFG.START_LEN;
         s.sprayHeld = s.skill === 'spray' && inp.boost;
         if (inp.skill) this.useSkill(s);
+        if (inp.item) { this.useItem(s); inp.item = false; }
       } }
       if (m) s.boost = false;
       if (s.ejectT > 0) s.ejectT = Math.max(0, s.ejectT - dt);
@@ -707,11 +770,10 @@ const Sim = {
       s.x += Math.cos(s.dir) * sp * dt; s.z += Math.sin(s.dir) * sp * dt;
       // walls and fixtures
       mapPush(s, s.r * 1.3);
-      // boosting costs length and drops food
+      // boosting costs length
       if (s.boost) {
-        s.lenTarget -= dt * CFG.BOOST_LEN; s.dropT += dt;
+        s.lenTarget -= dt * CFG.BOOST_LEN;
         s.rTarget = Math.max(CFG.START_R, s.rTarget - dt * CFG.BOOST_THIN); // and slowly thinner
-        if (s.dropT > 0.175) { s.dropT = 0; this.food.push(this.makeFood(s.tx + rnd(-.4, .4), s.tz + rnd(-.4, .4), 0.5)); }
       }
       // grow / shrink smoothly (never faster than the head moves, so the tail never needs history we dropped)
       s.lenTarget = Math.min(CFG.MAX_LEN, Math.max(CFG.START_LEN, s.lenTarget));
@@ -729,6 +791,7 @@ const Sim = {
     for (const s of alive) if (s.alive) this.buildBody(s);
     this.eat(alive);
     this.stepTraps(dt, alive);
+    this.stepItems(dt, alive);
   },
 
   collide(alive) {
@@ -873,14 +936,18 @@ const Sim = {
         if (inCone < 0) { gx += sx * side * (best.r + 3); gz += sz * side * (best.r + 3); }
       }
     } else {
-      // graze nearest food in front-ish
+      // go for the nearest item orb in front-ish (if not holding one), else wander
       let fd = 1e9;
-      for (const p of this.food) {
+      if (!s.item) for (const p of this.orbs) {
         const dx = p.x - s.x, dz = p.z - s.z, d = dx * dx + dz * dz;
         const ahead = dx * Math.cos(s.dir) + dz * Math.sin(s.dir);
         const score = d - ahead * 6;
         if (score < fd) { fd = score; gx = p.x; gz = p.z; }
       }
+    }
+    if (gx === null) { // wander towards a random spot, picking a new one on arrival
+      if (!ai.wx || Math.hypot(ai.wx - s.x, ai.wz - s.z) < 5) { const p = randomFree(4); ai.wx = p.x; ai.wz = p.z; }
+      gx = ai.wx; gz = ai.wz;
     }
     if (gx !== null) s.target = Math.atan2(gz - s.z, gx - s.x);
     // steer around walls and fixtures: probe ahead and swing to the first clear heading
@@ -1763,7 +1830,7 @@ function keyboardTarget() {
 }
 // ---- skill button (bottom right): hold for boost, tap for swap / clench ----
 const boostBtn = document.getElementById('boost'), skillLbl = document.getElementById('skillLbl'), skillCd = document.getElementById('skillCd');
-let boostHeld = false, skillTap = false;
+let boostHeld = false, skillTap = false, itemTap = false;
 function skillDown() {
   if (me && me.alive && SKILLS[me.skill].passive) { if (me.cd <= 0 && me.ouroT <= 0) toast(T('toast.ouroHint')); return; } // 銜尾蛇: no button, this only shows the cooldown
   boostHeld = true; skillTap = true; boostBtn.classList.add('on');
@@ -1776,7 +1843,7 @@ window.addEventListener('mousedown', e => { if (e.button === 2 && running && !(e
 window.addEventListener('mouseup', e => { if (e.button === 2) boostOff(); });
 window.addEventListener('blur', boostOff);
 boostBtn.addEventListener('pointerup', boostOff); boostBtn.addEventListener('pointerleave', boostOff); boostBtn.addEventListener('pointercancel', boostOff);
-window.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Shift') && !e.repeat) skillTap = true; });
+window.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Shift') && !e.repeat) skillTap = true; if ((e.key === 'e' || e.key === 'E' || e.key === 'q' || e.key === 'Q') && !e.repeat) itemTap = true; });
 let cdShown = '';
 function updateSkillBtn() {
   const s = me && me.alive ? me : null, sk = s ? s.skill : settings.skill;
@@ -2100,6 +2167,8 @@ function handleEvents() {
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(T('toast.ejected', { name: nameOf(B) })); if (B === me) toast(T('toast.eject', { name: nameOf(A) })); continue; }
     if (ev.type === 'tissue') { if (A === me) toast(T('toast.tissue')); continue; }
+    if (ev.type === 'item') { spawnSplash(ev.x, 1, ev.z, 1, 0, '#dff4ff'); if (A === me) toast(T('toast.gotItem', { item: T('item.' + ev.item) })); continue; }
+    if (ev.type === 'useItem') { if (A === me) toast(T('toast.use.' + ev.item)); continue; }
     if (ev.type === 'bubble') { if (A === me) toast(T('toast.bubble')); continue; }
     if (ev.type === 'pop') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffe6ee'); if (A === me) toast(T('toast.pop')); continue; }
     if (ev.type === 'bounce') { if (A === me) toast(T('toast.bounceOther', { name: nameOf(B) })); if (B === me) toast(T('toast.bounceMe')); continue; }
@@ -2153,8 +2222,8 @@ function frame(now) {
   // gather player input
   if (me && me.alive) {
     const kt = keyboardTarget();
-    inputs.set(me.id, { target: kt !== null ? kt : input.target, boost: boostHeld || keys.has(' ') || keys.has('shift'), skill: skillTap });
-    skillTap = false;
+    inputs.set(me.id, { target: kt !== null ? kt : input.target, boost: boostHeld || keys.has(' ') || keys.has('shift'), skill: skillTap, item: itemTap });
+    skillTap = false; itemTap = false;
     if (tut && tut.lock) inputs.set(me.id, { target: null, boost: false, skill: false }); // tutorial: the ambush happens to you
   }
   if (tut) tutInputs();
@@ -2169,6 +2238,7 @@ function frame(now) {
     if (s.spraying) sprayJet(s, dt);
   }
   updateTraps(dt);
+  updateOrbs(dt); updateItemBtn();
   // food
   const f = Sim.food, fn = Math.min(f.length, FOOD_MAX);
   for (let i = 0; i < fn; i++) {
@@ -2225,6 +2295,75 @@ const condomObj = (() => {
 })();
 const bubbleMat = new THREE.MeshStandardMaterial({ color: '#ffe6ee', transparent: true, opacity: 0.3, roughness: 0.08, metalness: 0.1, depthWrite: false });
 const tissueViews = new Map(), trapViews = new Map();
+// ---- item art: drawn on canvases. The orb holds the D outline; the slot shows the item ----
+const rrect = (g, x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }; // (roundRect is missing on older Safari)
+const ITEM_ICONS = (() => {
+  const S = 128, mk = f => { const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); f(g); return c.toDataURL(); };
+  return {
+    condom: mk(g => { // rolled-out condom: tip, body, thick rolled rim
+      g.lineJoin = 'round'; g.fillStyle = 'rgba(255,170,205,.92)'; g.strokeStyle = '#d0507f'; g.lineWidth = 5;
+      g.beginPath(); g.moveTo(40, 100); g.lineTo(42, 40); g.quadraticCurveTo(44, 26, 56, 24); g.arc(64, 20, 8, Math.PI, 0); g.quadraticCurveTo(84, 26, 86, 40); g.lineTo(88, 100); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(52, 60, 4, 22, 0, 0, 6.283); g.fill();
+      g.fillStyle = '#ff9cc4'; g.lineWidth = 6; g.beginPath(); g.ellipse(64, 102, 32, 10, 0, 0, 6.283); g.fill(); g.stroke(); }),
+    tissue: mk(g => { // a tissue box with a sheet sticking up
+      g.lineJoin = 'round'; g.lineWidth = 5; g.strokeStyle = '#3c6d8f';
+      g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(46, 66); g.bezierCurveTo(40, 40, 58, 30, 52, 12); g.bezierCurveTo(70, 20, 84, 14, 90, 22); g.bezierCurveTo(80, 38, 92, 50, 82, 66); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#8fd0f5'; rrect(g, 18, 62, 92, 48, 8); g.fill(); g.stroke();
+      g.fillStyle = '#5aa8d6'; g.beginPath(); g.ellipse(64, 70, 26, 6, 0, 0, 6.283); g.fill();
+      g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(40, 92, 6, 6, 0, 0, 6.283); g.ellipse(64, 96, 5, 5, 0, 0, 6.283); g.ellipse(88, 90, 6, 6, 0, 0, 6.283); g.fill(); }),
+    lube: mk(g => { // pump bottle with a drip
+      g.lineJoin = 'round'; g.lineWidth = 5; g.strokeStyle = '#2b5f86';
+      g.fillStyle = '#6d7f8f'; rrect(g, 54, 10, 26, 14, 3); g.fill(); g.stroke(); g.beginPath(); g.moveTo(80, 16); g.lineTo(96, 16); g.stroke();
+      g.fillStyle = '#9ad9ff'; rrect(g, 40, 26, 54, 88, 14); g.fill(); g.stroke();
+      g.fillStyle = '#ffffff'; rrect(g, 48, 54, 38, 30, 6); g.fill();
+      g.fillStyle = '#2b5f86'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.fillText('LUBE', 67, 74);
+      g.fillStyle = 'rgba(190,235,255,.95)'; g.beginPath(); g.moveTo(104, 26); g.quadraticCurveTo(116, 46, 104, 50); g.quadraticCurveTo(92, 46, 104, 26); g.fill(); g.stroke(); }),
+    egg: mk(g => { // two soft peach balls in one pouch, with a seam and a few wrinkles
+      const grd = g.createRadialGradient(54, 54, 8, 64, 70, 60); grd.addColorStop(0, '#ffd7bf'); grd.addColorStop(1, '#e58f6c');
+      g.fillStyle = grd; g.strokeStyle = '#a95a3c'; g.lineWidth = 5;
+      g.beginPath(); g.ellipse(44, 72, 30, 34, -0.2, 0, 6.283); g.ellipse(84, 72, 30, 34, 0.2, 0, 6.283); g.fill();
+      g.beginPath(); g.ellipse(44, 72, 30, 34, -0.2, 0, 6.283); g.stroke(); g.beginPath(); g.ellipse(84, 72, 30, 34, 0.2, 0, 6.283); g.stroke();
+      g.fillStyle = grd; g.beginPath(); g.ellipse(64, 66, 22, 30, 0, 0, 6.283); g.fill(); // smooth over the middle
+      g.strokeStyle = 'rgba(169,90,60,.6)'; g.lineWidth = 3; g.beginPath(); g.moveTo(64, 42); g.quadraticCurveTo(60, 72, 64, 104); g.stroke();
+      for (const [x, y] of [[36, 60], [90, 58], [46, 92], [82, 94]]) { g.beginPath(); g.arc(x, y, 7, 0.4, 2.2); g.stroke(); } }),
+  };
+})();
+// the token inside each orb: a small solid D (white front and back, dark sides), with a black silhouette just behind it as an outline
+const orbIconGeo = (() => {
+  const u = CFG.ITEM_R / 1.4, shapes = [];
+  const circ = (x, y, r) => { const sh = new THREE.Shape(); sh.absarc(x * u, y * u, r * u, 0, Math.PI * 2, false); return sh; };
+  const rect = (x0, y0, x1, y1) => { const sh = new THREE.Shape(); sh.moveTo(x0 * u, y0 * u); sh.lineTo(x1 * u, y0 * u); sh.lineTo(x1 * u, y1 * u); sh.lineTo(x0 * u, y1 * u); sh.closePath(); return sh; };
+  shapes.push(circ(0, 0.62, 0.36), rect(-0.26, -0.55, 0.26, 0.62), circ(-0.33, -0.62, 0.4), circ(0.33, -0.62, 0.4));
+  const g = new THREE.ExtrudeGeometry(shapes, { depth: 0.3 * u, bevelEnabled: false, curveSegments: 28 });
+  g.translate(0, 0.06 * u, -0.15 * u); return g;
+})();
+const orbGlassGeo = new THREE.SphereGeometry(CFG.ITEM_R, 28, 20);
+const orbGlassMat = new THREE.MeshStandardMaterial({ color: '#dff4ff', transparent: true, opacity: 0.28, roughness: 0.04, metalness: 0.15, depthWrite: false });
+const orbIconMats = [new THREE.MeshStandardMaterial({ color: '#fbfaf6', roughness: 0.45, emissive: '#ffffff', emissiveIntensity: 0.3 }), new THREE.MeshStandardMaterial({ color: '#1d1d1f', roughness: 0.6 })];
+const orbViews = new Map();
+function updateOrbs(dt) {
+  if (!orbGlassMat.envMap) { orbGlassMat.envMap = metalEnv(); orbGlassMat.envMapIntensity = 1.4; orbGlassMat.needsUpdate = true; }
+  const seen = new Set(), t = Sim.time;
+  for (const o of Sim.orbs || []) {
+    seen.add(o.id);
+    let v = orbViews.get(o.id);
+    if (!v) { v = new THREE.Group(); const ic = new THREE.Mesh(orbIconGeo, orbIconMats), gl = new THREE.Mesh(orbGlassGeo, orbGlassMat); gl.renderOrder = 2; v.add(ic, gl); v.userData.t = 0; scene.add(v); orbViews.set(o.id, v); }
+    v.userData.t += dt; const sc = Math.min(1, v.userData.t / 0.4);
+    v.scale.setScalar(Math.max(1e-3, sc * (1 + 0.04 * Math.sin(t * 3 + o.ph))));
+    v.position.set(o.x, groundY(o.x, o.z) + CFG.ITEM_R + 0.25 + 0.18 * Math.sin(t * 1.6 + o.ph), o.z);
+    v.rotation.y = t * 0.8 + o.ph; // slowly turning
+  }
+  for (const [id, v] of orbViews) if (!seen.has(id)) { scene.remove(v); orbViews.delete(id); }
+}
+const itemBtn = document.getElementById('itemBtn'), itemImg = document.getElementById('itemImg');
+let itemShown = null;
+function updateItemBtn() {
+  const it = me && me.alive ? me.item || null : null;
+  if (it === itemShown) return;
+  itemShown = it; itemBtn.disabled = !it; itemBtn.classList.toggle('full', !!it); itemImg.hidden = !it;
+  if (it) { itemImg.src = ITEM_ICONS[it]; itemBtn.setAttribute('aria-label', T('item.' + it)); } else itemBtn.setAttribute('aria-label', T('item.empty'));
+}
+itemBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (me && me.alive && me.item) itemTap = true; });
 function updateTraps(dt) {
   if (!bubbleMat.envMap) { bubbleMat.envMap = metalEnv(); bubbleMat.envMapIntensity = 1.3; bubbleMat.needsUpdate = true; }
   // tissues on the floor
@@ -2359,7 +2498,7 @@ function startTutorial() {
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
   buildMap(settings.map);
-  Sim.reset(); Sim.food.length = 0; Sim.noFood = true;
+  Sim.reset(); Sim.food.length = 0; Sim.orbs.length = 0; Sim.noFood = true;
   Sim.playerColor = settings.color; Sim.playerPattern = settings.pattern; Sim.playerSkill = 'boost';
   me = Sim.addSnake(true); me.invuln = 0;
   camFollow = me; running = true; camPos.set(me.x, 40, me.z + 30);
