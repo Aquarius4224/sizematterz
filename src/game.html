@@ -2464,14 +2464,15 @@ function makeShower(root) {
     const m = new THREE.Mesh(puddleGeo, wetMat); m.position.set(x, 0.045, z); m.scale.set(rx, 1, rz); m.rotation.y = i * 0.7; m.renderOrder = -200000; root.add(m);
   });
   const ripG = new THREE.RingGeometry(0.75, 1, 24); ripG.rotateX(-Math.PI / 2);
-  const rips = [];
+  // ripples come from a fixed pool of 40 meshes that are reused (they used to be created per drop and never taken out of the room, so they piled up and slowed the game)
+  const rips = [], ripFree = [];
+  for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(ripG, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5, depthWrite: false })); m.visible = false; root.add(m); ripFree.push(m); }
   return function update(dt) {
     for (let i = 0; i < N; i++) {
       const d = st[i]; d.y -= d.v * dt;
       if (d.y <= 0.05) {
-        if (rips.length < 40 && Math.random() < 0.25) { // ripple where it lands
-          const m = new THREE.Mesh(ripG, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5, depthWrite: false }));
-          m.position.set(d.x, 0.06, d.z); root.add(m); rips.push({ m, t: 0 });
+        if (ripFree.length && Math.random() < 0.25) { // ripple where it lands
+          const m = ripFree.pop(); m.visible = true; m.position.set(d.x, 0.06, d.z); rips.push({ m, t: 0 });
         }
         reset(d, false);
       }
@@ -2481,7 +2482,7 @@ function makeShower(root) {
     for (let i = rips.length - 1; i >= 0; i--) {
       const r = rips[i]; r.t += dt; const k = r.t / 0.5;
       r.m.scale.setScalar(0.1 + k * 0.5); r.m.material.opacity = 0.5 * (1 - k);
-      if (k >= 1) { scene.remove(r.m); r.m.material.dispose(); rips.splice(i, 1); }
+      if (k >= 1) { r.m.visible = false; ripFree.push(r.m); rips.splice(i, 1); }
     }
   };
 }
