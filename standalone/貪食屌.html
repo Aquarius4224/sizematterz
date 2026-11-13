@@ -66,13 +66,8 @@ body {
 #boost .lbl { position: relative; font-size: 15px; line-height: 1.15; padding: 0 8px; }
 #boost.cooling .lbl { opacity: 0; }
 #boost.ready { box-shadow: 0 0 0 3px var(--sun), 0 3px 12px rgba(0,0,0,.18); }
-#coneBtn {
-  right: calc(112px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px));
-  height: 40px; padding: 0 14px; border-radius: 20px; font-size: 13px;
-}
-#coneBtn[aria-pressed="false"] { opacity: .6; }
 #itemBtn { /* the item slot: a small circle (half the skill button) beside it */
-  right: calc(96px + env(safe-area-inset-right, 0px)); bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  right: calc(112px + env(safe-area-inset-right, 0px)); bottom: calc(29px + env(safe-area-inset-bottom, 0px));
   width: 42px; height: 42px; border-radius: 50%; padding: 0; display: grid; place-items: center; overflow: hidden;
 }
 #itemBtn img { width: 34px; height: 34px; pointer-events: none; }
@@ -210,7 +205,6 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 <div class="hud" id="board"><div class="title" data-i18n="hud.board">排行</div><div id="boardRows"></div></div>
 <div class="hud" id="toast"></div>
 <div id="joy" hidden><div class="knob" id="knob"></div></div>
-<button class="btn" id="coneBtn" aria-pressed="true" data-i18n="btn.cone">判定範圍</button>
 <button class="btn" id="itemBtn" aria-label="item" disabled><img id="itemImg" alt="" hidden></button>
 <button class="btn" id="boost"><span class="lbl" id="skillLbl">加速</span><span class="cd" id="skillCd"></span></button>
 
@@ -228,6 +222,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <button class="sub" id="skinBtn"><span data-i18n="menu.skin">SKIN</span> <small><span data-i18n="menu.skinSub">造型</span> <span class="dot" id="skinDot"></span></small></button>
     <button class="sub" id="skillBtn"><span data-i18n="menu.skill">SKILL</span> <small id="skillName">技能</small></button>
     <button class="sub" id="mapBtn"><span data-i18n="menu.map">MAP</span> <small id="mapName">地圖</small></button>
+    <button class="sub" id="setBtn"><span data-i18n="menu.settings">SETTINGS</span> <small data-i18n="menu.settingsSub">設定</small></button>
     <button class="back" id="tutBtn" data-i18n="menu.tut">再看一次教學</button>
     <p class="hint" data-i18n="menu.hint">拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能插入整條蛇。</p>
     <button class="back" id="muteBtn" aria-pressed="true">🔊 音樂開</button>
@@ -261,6 +256,16 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
   <div class="card scroll">
     <h2 data-i18n="map.title">選擇地圖</h2>
     <div class="opts" id="mapOpts"></div>
+    <button class="back" data-back data-i18n="back">‹ 返回</button>
+  </div>
+</div>
+
+<div class="overlay" id="setOv" hidden>
+  <div class="card scroll">
+    <h2 data-i18n="set.title">設定</h2>
+    <div class="opts">
+      <button class="opt" id="coneOpt"><b><span data-i18n="set.cone">判定範圍</span><span id="coneState"></span></b><p data-i18n="set.coneDesc">在每條蛇的尾巴後方顯示可以插入的扇形範圍。</p></button>
+    </div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
 </div>
@@ -302,6 +307,7 @@ const I18N = {
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
     'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.pill': '威爾鋼', 'item.empty': '道具格（空）',
     'toast.gotItem': '拿到{item}了！按右下的小圓圈使用', 'toast.use.tissue': '丟下衛生紙！誰碰到誰變慢', 'toast.use.lube': '潤滑油！加速中', 'toast.use.pill': '威爾鋼！身體變大了',
+    'menu.settings': 'SETTINGS', 'menu.settingsSub': '設定', 'set.title': '設定', 'set.cone': '判定範圍', 'set.coneDesc': '在每條蛇的尾巴後方顯示可以插入的扇形範圍。', 'set.on': '開', 'set.off': '關',
     'tut.step': '教學 {n} / 4', 'tut.skip': '跳過教學', 'tut.done': '前往主選單', 'tut.dummy': '練習蛇', 'tut.hunter': '偷襲蛇',
     'tut.1t': '移動', 'tut.1': '在螢幕上拖曳來控制方向（電腦：方向鍵、WASD，或按住滑鼠左鍵拖曳）。試著往上、下、左、右各走一段。',
     'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：按住滑鼠右鍵或空白鍵）。加速會消耗體型喔。',
@@ -327,6 +333,7 @@ const I18N = {
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
     'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.pill': 'Blue Pill', 'item.empty': 'Item slot (empty)',
     'toast.gotItem': 'Got {item}! Tap the small circle to use it', 'toast.use.tissue': 'Tissue dropped! Whoever touches it slows down', 'toast.use.lube': 'Lubed up! Speed boost', 'toast.use.pill': 'Blue pill! You got bigger',
+    'menu.settings': 'SETTINGS', 'menu.settingsSub': '', 'set.title': 'Settings', 'set.cone': 'Hit zone', 'set.coneDesc': 'Show the fan behind each snake’s tail where you can plug it.', 'set.on': 'On', 'set.off': 'Off',
     'tut.step': 'Tutorial {n} / 4', 'tut.skip': 'Skip tutorial', 'tut.done': 'Main menu', 'tut.dummy': 'Dummy', 'tut.hunter': 'Sneaker',
     'tut.1t': 'Move', 'tut.1': 'Drag on the screen to steer (computer: arrow keys, WASD, or hold the left mouse button and drag). Try going up, down, left and right.',
     'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: hold the right mouse button or Space). Boosting costs you size.',
@@ -1862,9 +1869,9 @@ function updateSkillBtn() {
 // ---- menus: start / skin / skill (choices remembered on this device) ----
 const SKINS = ['#ff5a7a', ...COLORS];
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', lang };
-try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; } catch (e) {}
+try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
-const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv') };
+const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), set: document.getElementById('setOv') };
 const showOv = name => { for (const k in ovs) ovs[k].hidden = k !== name; if (name === 'start' && typeof BGM !== 'undefined') BGM.scene('menu'); };
 function renderMenus() {
   const bgOf = settings.pattern ? skinThumb(settings.pattern) : settings.color;
@@ -1898,15 +1905,18 @@ function buildMenus() {
 buildMenus();
 document.getElementById('langBtn').addEventListener('click', () => {
   lang = settings.lang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]; saveSettings();
-  applyStatic(); buildMenus(); renderMenus(); if (typeof BGM !== 'undefined') BGM.redraw();
+  applyStatic(); buildMenus(); renderMenus(); drawConeOpt(); if (typeof BGM !== 'undefined') BGM.redraw();
 });
 document.getElementById('mapBtn').addEventListener('click', () => showOv('map'));
 document.getElementById('skinBtn').addEventListener('click', () => showOv('skin'));
 document.getElementById('skillBtn').addEventListener('click', () => showOv('skill'));
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', () => showOv('start'));
-let showCones = true;
-const coneBtn = document.getElementById('coneBtn');
-coneBtn.addEventListener('click', () => { showCones = !showCones; coneBtn.setAttribute('aria-pressed', String(showCones)); });
+let showCones = settings.cones !== false; // the hit-zone fans: switched in the start menu's settings page
+const coneOpt = document.getElementById('coneOpt');
+const drawConeOpt = () => { coneOpt.setAttribute('aria-pressed', String(showCones)); document.getElementById('coneState').textContent = T(showCones ? 'set.on' : 'set.off'); };
+coneOpt.addEventListener('click', () => { showCones = settings.cones = !showCones; saveSettings(); drawConeOpt(); });
+drawConeOpt();
+document.getElementById('setBtn').addEventListener('click', () => showOv('set'));
 
 /* =====================================================================
    GAME LOOP
