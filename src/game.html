@@ -330,7 +330,7 @@ const CFG = {
   S: 0.5,             // trail sample spacing
   START_LEN: 8, START_R: 0.6,
   MAX_LEN: 200, MAX_R: 3.2,
-  FOOD: 170, AI: 7,
+  FOOD: 680, AI: 7, // food keeps the old density on the 2x rooms
   CONE: Math.PI / 4,  // absorb cone half-angle behind the tail
   SPEED: 7.5, BOOST: 13, TURN: 4.2,
   BOOST_LEN: 3.2, BOOST_THIN: 0.024, // per second of boosting: length lost, radius lost
@@ -391,6 +391,21 @@ const MAPS = {
     condom: { from: [-30, -20], spots: [[-38, 3], [-37, 14], [-45, 15.5], [-53, 15.5], [-39, -1.5], [-48, 19]] },
   },
 };
+// the rooms are drawn in the units above and played at MAP_SCALE times that size: MAPS holds the scaled copy the game uses,
+// MAP_RAW the drawing units the room builders use (buildMap scales the built room to match)
+const MAP_SCALE = 2, MAP_RAW = {};
+for (const id in MAPS) {
+  const r = MAPS[id], k = MAP_SCALE, box = o => o && Object.assign({}, o, { x0: o.x0 * k, x1: o.x1 * k, z0: o.z0 * k, z1: o.z1 * k });
+  MAP_RAW[id] = r;
+  MAPS[id] = Object.assign({}, r, {
+    W: r.W * k, H: r.H * k, door: r.door.map(v => v * k), obstacles: r.obstacles.map(box),
+    mat: r.mat && Object.assign(box(r.mat), { h: r.mat.h * k }),
+    shower: r.shower && Object.assign(box(r.shower), { cx: r.shower.cx * k, cz: r.shower.cz * k, rain: r.shower.rain * k }),
+    wet: r.wet && r.wet.map(w => w.map(v => v * k)),
+    tissues: r.tissues && Object.assign({}, r.tissues, { cx: r.tissues.cx * k, cz: r.tissues.cz * k, rMin: r.tissues.rMin * k, rMax: r.tissues.rMax * k }),
+    condom: r.condom && { from: r.condom.from.map(v => v * k), spots: r.condom.spots.map(p => p.map(v => v * k)) },
+  });
+}
 let MAP = MAPS.bathroom, MAP_ID = 'bathroom';
 const inShower = (x, z) => !!MAP.shower && x > MAP.shower.x0 && x < MAP.shower.x1 && z > MAP.shower.z0 && z < MAP.shower.z1;
 const onWet = (x, z) => inShower(x, z) && (MAP.wet || []).some(([cx, cz, rx, rz]) => ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2 < 1);
@@ -1257,9 +1272,11 @@ function buildMap(id) {
   };
   k.add = (geo, mat, x, y, z, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; mapRoot.add(m); return k.track(m); };
   k.box = (o, h, mat, inset = 0) => k.add(new THREE.BoxGeometry(o.x1 - o.x0 - inset * 2, h, o.z1 - o.z0 - inset * 2), mat, (o.x0 + o.x1) / 2, h / 2, (o.z0 + o.z1) / 2);
+  MAP = MAP_RAW[id]; // the builders work in drawing units
   (id === 'bedroom' ? makeBedroom : makeBathroom)(k);
   k.group(null);
   mapShower = MAP.shower ? makeShower(mapRoot) : null;
+  MAP = MAPS[id]; mapRoot.scale.setScalar(MAP_SCALE);
   // each group gets its own copies of its materials, so fading the toilet doesn't fade the tub
   scene.updateMatrixWorld(true);
   for (const g of fadeGroups) {
@@ -1295,7 +1312,7 @@ function updateFade(dt, s) {
 }
 
 // food (instanced)
-const FOOD_MAX = 600;
+const FOOD_MAX = 1000;
 const foodMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshStandardMaterial({ roughness: .35, emissiveIntensity: .35 }), FOOD_MAX);
 foodMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 const colorObjs = COLORS.map(c => new THREE.Color(c));
