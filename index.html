@@ -2035,7 +2035,7 @@ function updateSkillBtn() {
 
 // ---- menus: start / skin / skill (choices remembered on this device) ----
 const SKINS = ['#ff5a7a', ...COLORS];
-const MODES = ['classic', 'br', 'endless']; // 經典 / 吃雞 (last snake standing, no respawns)
+const MODES = ['endless', 'br', 'classic']; // 經典 / 吃雞 (last snake standing, no respawns)
 const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: CFG.BR_N });
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
 try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
