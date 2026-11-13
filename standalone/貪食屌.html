@@ -1839,7 +1839,10 @@ const whiteMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .
 const blackMat = new THREE.MeshStandardMaterial({ color: '#12343a', roughness: .3 });
 // cone fan: 90° wedge (±45°) pointing +x, laid on the ground
 const coneGeo = new THREE.CircleGeometry(1, 20, -CFG.CONE, CFG.CONE * 2); coneGeo.rotateX(-Math.PI / 2);
-const foreGeo = (() => { const g = new THREE.TorusGeometry(1.0, 0.4, 14, 32); g.rotateY(Math.PI / 2); g.scale(2.2, 1, 1); return g; })(); // a fat roll around the head
+const foreGeo = (() => { // Turtleneck foreskin: a smooth sleeve hugging the back of the head (head-local, radius 1), flush with the body at the neck, ending in a soft rolled lip
+  const prof = [[1.0, -0.6], [1.015, -0.4], [1.045, -0.15], [1.06, 0.1], [1.04, 0.35], [0.98, 0.56], [0.89, 0.76], [0.81, 0.9], [0.77, 0.97], [0.735, 1.0], [0.7, 0.985], [0.685, 0.95]];
+  const g = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), HEAD_SEGS); g.rotateZ(-Math.PI / 2); return g;
+})();
 const coneGeos = new Map([[CFG.CONE.toFixed(4), coneGeo]]);
 function coneGeoFor(half) { // fans for other angles (廣角鏡 widens what you can hit, 菊花緊縮 narrows your own tail)
   const k = half.toFixed(4); let g = coneGeos.get(k);
@@ -1897,7 +1900,7 @@ function makeView(s) {
   const hs = new THREE.Mesh(headGeo, mat); hs.castShadow = true; head.add(hs);
   const mouthIn = new THREE.Mesh(sphereGeo, mouthMat); head.add(mouthIn); // dark inside of the mouth
   let fore = null;
-  if (s.special === 'turtle') { fore = new THREE.Mesh(foreGeo, new THREE.MeshStandardMaterial({ color: new THREE.Color(s.color).multiplyScalar(0.82), roughness: .6 })); fore.castShadow = true; head.add(fore); } // foreskin ring (head-local: +x forward, radius 1)
+  if (s.special === 'turtle') { fore = new THREE.Mesh(foreGeo, mat); fore.castShadow = true; head.add(fore); } // foreskin ring (head-local: +x forward, radius 1)
   const tail = new THREE.Mesh(tailCapGeo, tailMat); tail.castShadow = true; tailMat.side = THREE.DoubleSide;
   const plug = new THREE.Mesh(plugGeo, tailMat); plug.visible = false; tail.add(plug); // in tail-local space
   let calyx = null;
@@ -1917,7 +1920,7 @@ function makeView(s) {
 function dropView(id) {
   const v = views.get(id); if (!v) return;
   scene.remove(v.tube, v.head, v.tail, v.cone); if (v.ring) scene.remove(v.ring);
-  v.tube.geometry.dispose(); v.headGeo.dispose(); v.mat.dispose(); v.tailMat.dispose(); v.tubeMat.dispose(); v.cone.material.dispose(); if (v.tailTex) v.tailTex.dispose(); if (v.calyx) v.calyx.material.dispose(); if (v.fore) v.fore.material.dispose();
+  v.tube.geometry.dispose(); v.headGeo.dispose(); v.mat.dispose(); v.tailMat.dispose(); v.tubeMat.dispose(); v.cone.material.dispose(); if (v.tailTex) v.tailTex.dispose(); if (v.calyx) v.calyx.material.dispose();
   views.delete(id);
 }
 
@@ -2112,7 +2115,7 @@ function updateView(s, v, t, me) {
   if (s.special === 'hammerhead') { const hr = radAt(0, 0) * qEnd; v.head.scale.set(hr * 1.35, hr * 2, hr * 2); v.head.position.y += s.r * 0.75; } // swollen head, riding a bit higher so it clears the floor
   if (v.fore) { // Turtleneck: the foreskin rolls back while plugging, then slides forward over the head again
     const k = m && m.a === s ? 0 : s.wrapT > 0 ? Math.max(0, Math.min(1, (1.9 - s.wrapT) / 1.6)) : 1;
-    v.fore.position.x = -0.3 + 0.8 * k; const sc = 1.12 - 0.1 * k; v.fore.scale.set(1, sc, sc);
+    v.fore.position.x = -0.55 * (1 - k); const sc = 1 + 0.06 * (1 - k); v.fore.scale.set(1, sc, sc); // rolled back onto the neck while plugging
   }
   // mouth opens left/right while spitting
   let mo = 0;
