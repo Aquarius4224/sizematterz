@@ -82,6 +82,7 @@ body {
   display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 3px solid var(--rc); border-radius: calc(var(--cw) * .125); background: #fff; color: var(--ink);
   font-family: var(--font-display); text-align: center; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,.3);
   transform-origin: 50% 100%; transition: transform .3s cubic-bezier(.2,.8,.3,1.2), opacity .3s ease; -webkit-tap-highlight-color: transparent; }
+.gcard:focus { outline: none; } .gcard:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
 .gcard .art { position: relative; height: 38%; flex-shrink: 0; background: var(--art); display: flex; align-items: center; justify-content: center; }
 .gcard .art svg { width: 48%; height: auto; fill: none; stroke: var(--ic); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .gcard .rar { position: absolute; top: 6%; left: 6%; font-size: calc(var(--cw) * .09); font-weight: 700; letter-spacing: .06em; color: var(--tagFg); background: var(--tagBg); border-radius: 6px; padding: 1px 5px; }
@@ -685,6 +686,7 @@ function pickAILook(snakes, playerLook) {
 const rnd = (a, b) => a + Math.random() * (b - a);
 const wrapA = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
 
+let BOW_ARC = new Float64Array(256); // scratch: arc length along the body (Banana bow)
 const Sim = {
   snakes: [], food: [], events: [], merges: [], time: 0, nextId: 1,
 
@@ -922,10 +924,14 @@ const Sim = {
       }
     }
     if (s.special === 'banana' && b.length > 4) { // a natural bow to the right (ends stay on the path)
-      const n = b.length, c = Math.min(2.6, 0.1 * SL + 0.25), o = b.slice();
+      // The bow is placed by arc length, not by point index: the head point moves every frame and a new trail point is added every
+      // S units, so an index-based bow slid along the body and twitched each time the point count changed.
+      const n = b.length, c = Math.min(2.6, 0.1 * SL + 0.25), o = b.slice(), arc = BOW_ARC.length >= n ? BOW_ARC : (BOW_ARC = new Float64Array(n * 2));
+      arc[0] = 0; for (let i = 1; i < n; i++) arc[i] = arc[i - 1] + Math.hypot(o[i].x - o[i - 1].x, o[i].z - o[i - 1].z);
+      const tot = arc[n - 1] || 1;
       for (let i = 1; i < n - 1; i++) {
-        const a = o[i - 1], e = o[i + 1]; let tx = e.x - a.x, tz = e.z - a.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l;
-        const u = i / (n - 1), w = 4 * u * (1 - u) * c;
+        const a = o[Math.max(0, i - 2)], e = o[Math.min(n - 1, i + 2)]; let tx = e.x - a.x, tz = e.z - a.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l; // wider tangent: the short head segment no longer wobbles it
+        const u = arc[i] / tot, w = 4 * u * (1 - u) * c;
         b[i] = { x: o[i].x + tz * w, z: o[i].z - tx * w };
       }
     }
@@ -2730,6 +2736,7 @@ function openCards() {
 }
 document.getElementById('cardOk').addEventListener('click', () => { if (cardPick) pickCard(cardPick.c); });
 document.getElementById('cardBack').addEventListener('click', () => { if (cardPick) setCardPick(cardPick.b, cardPick.c); });
+document.getElementById('cardOv').addEventListener('click', e => { if (cardPick && !e.target.closest('.gcard, .cardOk')) setCardPick(cardPick.b, cardPick.c); }); // tapping anywhere off the cards puts the picked one back
 function pickCard(c) {
   if (!cardPause) return;
   me.mods[c.id] = (me.mods[c.id] || 0) + 1;
