@@ -487,7 +487,7 @@ const CFG = {
   S: 0.5,             // trail sample spacing
   START_LEN: 8, START_R: 0.6,
   MAX_LEN: 200, MAX_R: 3.2,
-  FOOD: 0, AI: 7, BR_N: 24, // 吃雞 mode: snakes at the start, player included
+  FOOD: 0, AI: 9, BR_N: 24, // computer snakes (classic / endless); 吃雞 mode: snakes at the start, player included. Picnic (the big map) gets more: see aiOf / brOf
   // no food any more: snakes grow by plugging others and from 蛋蛋 items
   CONE: Math.PI / 4,  // absorb cone half-angle behind the tail
   SPEED: 7.5, BOOST: 13, TURN: 4.2,
@@ -2280,7 +2280,8 @@ function updateSkillBtn() {
 // ---- menus: start / skin / skill (choices remembered on this device) ----
 const SKINS = ['#ff5a7a', ...COLORS];
 const MODES = ['endless', 'br', 'classic']; // 經典 / 吃雞 (last snake standing, no respawns)
-const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: CFG.BR_N });
+const aiOf = map => map === 'picnic' ? 15 : CFG.AI, brOf = map => map === 'picnic' ? 32 : CFG.BR_N; // most snakes on a map: picnic 16, others 10 (player included); 吃雞 picnic 32
+const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { n: brOf(settings.map) });
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
 try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (SPECIALS[sv.special]) settings.special = sv.special; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
@@ -2297,7 +2298,7 @@ function renderMenus() {
   for (const b of document.querySelectorAll('#mapOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.map));
   document.getElementById('mapName').textContent = T('menu.mapSub', { name: L(MAPS[settings.map], 'name') });
   for (const b of document.querySelectorAll('#specOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.sp === (settings.special || '')));
-  for (const b of document.querySelectorAll('#modeOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.mode));
+  for (const b of document.querySelectorAll('#modeOpts .opt')) { b.setAttribute('aria-pressed', String(b.dataset.m === settings.mode)); b.querySelector('p').textContent = modeDesc(b.dataset.m); } // 吃雞's snake count depends on the map
   document.getElementById('typeName').textContent = T('menu.typeSub', { name: settings.special && SPECIALS[settings.special] ? L(SPECIALS[settings.special], 'name') : T('spec.none') });
   updateSkillBtn();
 }
@@ -2363,10 +2364,10 @@ function newGame() {
   Sim.reset();
   Sim.playerColor = settings.color; Sim.playerSkill = settings.skill; Sim.playerPattern = settings.pattern; Sim.playerSpecial = settings.special || null;
   me = Sim.addSnake(true);
-  br = settings.mode === 'br'; brN = br ? CFG.BR_N : 0;
+  br = settings.mode === 'br'; brN = br ? brOf(settings.map) : 0;
   endless = settings.mode === 'endless'; cardPause = false; round = 0; pity = 0; document.getElementById('cardOv').hidden = true;
   if (endless) { me.mods = {}; me.maxLen = endlessGoal(); }
-  for (let i = 0; i < (br ? CFG.BR_N - 1 : CFG.AI); i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
+  for (let i = 0; i < (br ? brN - 1 : aiOf(settings.map)); i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   camFollow = me; running = true;
   document.getElementById('overOv').hidden = true;
   camPos.set(me.x, 40, me.z + 30);
@@ -3167,7 +3168,7 @@ function startAttract() {
   for (const j of jellies) { j.t = 99; } updateJellies(0);
   for (const id of [...views.keys()]) dropView(id);
   buildMap(settings.map);
-  Sim.reset(); for (let i = 0; i < CFG.AI; i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
+  Sim.reset(); for (let i = 0; i < aiOf(settings.map); i++) Sim.addSnake(false, null, pickAILook(Sim.snakes));
   me = null; running = false; camFollow = Sim.snakes[0];
 }
 startAttract();
