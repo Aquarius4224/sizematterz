@@ -271,7 +271,6 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <button class="sub" id="skillBtn"><span data-i18n="menu.skill">SKILL</span> <small id="skillName">技能</small></button>
     <button class="sub" id="mapBtn"><span data-i18n="menu.map">MAP</span> <small id="mapName">地圖</small></button>
     <button class="back" id="tutBtn" data-i18n="menu.tut">再看一次教學</button>
-    <p class="hint" data-i18n="menu.hint">拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能插入整條蛇。</p>
   </div>
 </div>
 
@@ -2059,6 +2058,7 @@ function updateView(s, v, t, me) {
     const ft = Lv - h; if (ft <= sl.Ls) return sl.k;
     const x = Math.min(1, (ft - sl.Ls) / sl.Lt); return (1 - x * x * (3 - 2 * x)) * sl.k;
   };
+  const hamF = s.special === 'hammerhead' ? h => { const x = Math.max(0, 1 - h / (3 * s.r)); return 1 + x * x * (3 - 2 * x); } : () => 1; // Hammerhead: the neck flares smoothly up to the 2× head
   const radAt = (i, h) => { // h = arc distance from this snake's head
     let r = s.r * swell * (1 + 0.05 * Math.sin(t * 6 - h * 1.1)); // peristaltic wobble = "soft"
     { // tail: looks like a ball has been stuffed into the end of the tube
@@ -2068,6 +2068,7 @@ function updateView(s, v, t, me) {
       const q = (h - s.r * 0.35) / (s.r * 0.45); // and a gentle ring where the head meets the body
       r *= 1 + 0.09 * Math.exp(-q * q);
     }
+    r *= hamF(h);
     if (qEnd < 1) { const dEnd = Math.min(h, Lv - h); r *= qEnd + (1 - qEnd) * Math.min(1, dEnd / (2.5 * s.r)); } // swap: both ends pinch shut, then open the other way round
     if (sl) r += (Math.max(r * 1.12, sl.R) - r) * sleeveW(h); // tail stretches around the head pushed into it
     if (!m) return r;
@@ -2124,7 +2125,7 @@ function updateView(s, v, t, me) {
     let tx = c.x - a.x, tz = c.z - a.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l;
     if (i === 0) { tx = -hdx; tz = -hdz; } // first ring faces exactly the way the head does
     if (i === nR - 1) { tx = TDX; tz = TDZ; } // last ring lines up exactly with the tail cap
-    const sx = -tz, sz = tx, r = radAt(i, h), cy = s.r * swell + lift[i] + (sl ? sl.dy * sleeveW(h) : 0), cc = colorAt(h);
+    const sx = -tz, sz = tx, r = radAt(i, h), cy = s.r * swell * (1 + 0.8 * (hamF(h) - 1)) + lift[i] + (sl ? sl.dy * sleeveW(h) : 0), cc = colorAt(h);
     { const sp = v.sp || (v.sp = []); if (i === 0) sp.length = 0; sp.push(p.x, cy, p.z); } // drawn spine centres (with lift), for things that wrap the body
     for (let k = 0, q = o; k < RV; k++, q += 3) { col[q] = cc.r; col[q + 1] = cc.g; col[q + 2] = cc.b; }
     if (uvA) { const vv = h / (Math.PI * 2 * s.r); for (let k = 0, q = o / 3 * 2; k < RV; k++, q += 2) { uvA[q] = k / RAD; uvA[q + 1] = vv; } }
@@ -2144,7 +2145,7 @@ function updateView(s, v, t, me) {
   v.tube.geometry.setDrawRange(0, (nR - 1) * RAD * 6);
   const cy = s.r * swell;
   v.head.position.set(b[0].x, cy + lift[0], b[0].z); v.head.rotation.y = -Math.atan2(hdz, hdx); v.head.scale.setScalar(Math.max(1e-3, radAt(0, 0) * qEnd));
-  if (s.special === 'hammerhead') { const hr = radAt(0, 0) * qEnd; v.head.scale.set(hr * 1.35, hr * 2, hr * 2); v.head.position.y += s.r * 0.75; } // swollen head, riding a bit higher so it clears the floor
+  if (s.special === 'hammerhead') { const hr = radAt(0, 0) * qEnd; v.head.scale.set(hr * 0.675, hr, hr); v.head.position.y += s.r * swell * 0.8; } // swollen head (radAt already includes the 2× flare), riding higher like the flared neck rings so it clears the floor
   if (v.fore) { // Turtleneck: the foreskin rolls back while plugging, then slides forward over the head again
     const k = m && m.a === s ? 0 : s.wrapT > 0 ? Math.max(0, Math.min(1, (1.0 - s.wrapT) / 0.85)) : 1;
     v.fore.position.x = -1.05 * (1 - k); const sc = 1 + 0.08 * (1 - k); v.fore.scale.set(1, sc, sc); // rolled back onto the neck while plugging
@@ -2272,14 +2273,15 @@ function renderMenus() {
   document.getElementById('modeName').textContent = T('menu.modeSub', { name: modeName(settings.mode) });
   updateSkillBtn();
 }
+const backSoon = () => setTimeout(() => showOv('start'), 160); // MODE / SKIN: a pick goes straight back to the menu (brief pause so the pressed state shows)
 function buildMenus() {
   const box = document.getElementById('swatches'); box.innerHTML = '';
   for (const c of SKINS) { const b = document.createElement('button'); b.className = 'sw'; b.dataset.c = c; b.style.background = c; b.setAttribute('aria-label', T('aria.color', { c }));
-    b.addEventListener('click', () => { settings.color = c; settings.pattern = null; saveSettings(); renderMenus(); }); box.appendChild(b); }
+    b.addEventListener('click', () => { settings.color = c; settings.pattern = null; saveSettings(); renderMenus(); backSoon(); }); box.appendChild(b); }
   const pats = document.getElementById('pats'); pats.innerHTML = '';
   for (const id in PATTERNS) { const sk = PATTERNS[id], b = document.createElement('button'); b.className = 'pat'; b.dataset.p = id;
     b.innerHTML = `<div class="th"></div><b>${L(sk, 'name')}</b><span>${L(sk, 'desc')}</span>`; b.querySelector('.th').style.background = skinThumb(id); b.querySelector('.th').style.backgroundSize = '72px 72px';
-    b.addEventListener('click', () => { settings.pattern = id; saveSettings(); renderMenus(); }); pats.appendChild(b); }
+    b.addEventListener('click', () => { settings.pattern = id; saveSettings(); renderMenus(); backSoon(); }); pats.appendChild(b); }
   const opts = document.getElementById('skillOpts'); opts.innerHTML = '';
   for (const k in SKILLS) { const sk = SKILLS[k], b = document.createElement('button'); b.className = 'opt'; b.dataset.k = k;
     b.innerHTML = `<b>${L(sk, 'name')}<span>${sk.passive ? T('skill.auto') : ''}${sk.cd ? T('skill.cd', { n: sk.cd }) : T('skill.hold')}</span></b><p>${L(sk, 'desc')}</p>`;
@@ -2287,15 +2289,15 @@ function buildMenus() {
   const mo = document.getElementById('mapOpts'); mo.innerHTML = '';
   for (const id in MAPS) { const m = MAPS[id], b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${L(m, 'name')}</b><p>${L(m, 'desc')}</p>`;
-    b.addEventListener('click', () => { settings.map = id; saveSettings(); renderMenus(); if (!running && !tut) startAttract(); }); mo.appendChild(b); }
+    b.addEventListener('click', () => { settings.map = id; saveSettings(); renderMenus(); if (!running && !tut) startAttract(); backSoon(); }); mo.appendChild(b); }
   const so = document.getElementById('specOpts'); so.innerHTML = '';
   for (const id of [null, ...SPECIAL_IDS]) { const sp = id && SPECIALS[id], b = document.createElement('button'); b.className = 'opt'; b.dataset.sp = id || '';
     b.innerHTML = `<b>${sp ? L(sp, 'name') : T('spec.none')}</b><p>${sp ? L(sp, 'desc') : T('spec.noneDesc')}</p>`;
-    b.addEventListener('click', () => { settings.special = id; saveSettings(); renderMenus(); }); so.appendChild(b); }
+    b.addEventListener('click', () => { settings.special = id; saveSettings(); renderMenus(); backSoon(); }); so.appendChild(b); }
   const md = document.getElementById('modeOpts'); md.innerHTML = '';
   for (const id of MODES) { const b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${modeName(id)}</b><p>${modeDesc(id)}</p>`;
-    b.addEventListener('click', () => { settings.mode = id; saveSettings(); renderMenus(); }); md.appendChild(b); }
+    b.addEventListener('click', () => { settings.mode = id; saveSettings(); renderMenus(); backSoon(); }); md.appendChild(b); }
 }
 buildMenus();
 document.getElementById('langBtn').addEventListener('click', () => {
