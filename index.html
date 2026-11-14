@@ -1930,10 +1930,10 @@ function dropView(id) {
 
 const LIFT = new Float32Array(MAXP), ARC = new Float32Array(MAXP), CELL = new Map();
 // 滑溜身體: where this snake lies over another snake's body, lift it to sit on top (then smooth the ramps like selfLift)
-function climbOthers(s, rp, nR, lift) {
+function climbOthers(s, rp, nR, lift, skip) {
   let any = false;
   for (const o of Sim.snakes) {
-    if (o === s || !o.alive || !o.body.length || Math.hypot(o.x - s.x, o.z - s.z) > s.len + o.len + 4) continue;
+    if (o === s || o === skip || !o.alive || !o.body.length || Math.hypot(o.x - s.x, o.z - s.z) > s.len + o.len + 4) continue;
     const D = s.r * 0.9 + o.r, top = o.r * 2, D2 = D * D, ob = o.body;
     for (let i = 0; i < nR; i++) {
       const p = rp[i]; let best = D2;
@@ -2081,11 +2081,11 @@ function updateView(s, v, t, me) {
   const nR = Math.min(rp.length, MAXP);
   // where the body crosses itself, the part nearer the head rides over the part nearer the tail
   const lift = s.ouroT > 0 ? LIFT.fill(0, 0, nR) : selfLift(rp, nR, s.r * swell); // biting its own tail: the head goes in, not over
+  if (mod(s, 'slippery')) climbOthers(s, rp, nR, lift, m ? (m.a === s ? m.b : m.a) : null); // 滑溜身體: rides up over other snakes instead of being pushed off (never over the snake it is plugged into / plugged by)
   if (m && m.a === s && m.b.alive) { // head pushed into someone's tail: sit at that tail's height, then climb steeply back onto any coil behind
     const tl = views.get(m.b.id)?.tailLift || 0, R0 = s.r * 1.6;
     for (let i = 0, a = 0; i < nR; i++) { if (i) a += Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z); const cap = tl + Math.max(0, a - R0) * 1.6; if (lift[i] > cap) lift[i] = cap; if (cap > s.r * 6) break; }
   }
-  if (mod(s, 'slippery')) climbOthers(s, rp, nR, lift); // 滑溜身體: rides up over other snakes instead of being pushed off
   v.tailLift = lift[nR - 1];
   let o = 0, h = 0, arcT = 0;
   for (let i = 1; i < nR; i++) arcT += Math.hypot(rp[i].x - rp[i - 1].x, rp[i].z - rp[i - 1].z);
