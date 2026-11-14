@@ -2352,6 +2352,16 @@ function keyboardTarget() {
   if (keys.has('w') || keys.has('arrowup')) y -= 1; if (keys.has('s') || keys.has('arrowdown')) y += 1;
   return (x || y) ? Math.atan2(y, x) : null;
 }
+// the keyboard direction also becomes the steering target, so after letting go of the keys the snake keeps the
+// last key direction (it used to fall back to the old mouse / drag direction). Letting go of a diagonal (W+D) rarely
+// lifts both keys in the same frame, so a single key held under 90 ms right after a diagonal still counts as that diagonal.
+let kPrev = null, kPrevT = 0, kDiag = null;
+function keyboardSteer() {
+  const kt = keyboardTarget(), now = performance.now(), diag = a => Math.abs(Math.sin(2 * a)) > 0.5;
+  if (kt !== null) { if (kt !== kPrev) { kPrevT = now; kDiag = kPrev !== null && diag(kPrev) ? kPrev : diag(kt) ? null : kDiag; } kPrev = kt; input.target = kt; }
+  else if (kPrev !== null) { input.target = !diag(kPrev) && kDiag !== null && now - kPrevT < 90 ? kDiag : kPrev; kPrev = null; kDiag = null; }
+  return kt;
+}
 // ---- skill button (bottom right): hold for boost, tap for swap / clench ----
 const boostBtn = document.getElementById('boost'), skillLbl = document.getElementById('skillLbl'), skillCd = document.getElementById('skillCd');
 let boostHeld = false, skillTap = false, itemTap = false;
@@ -2927,8 +2937,8 @@ function frame(now) {
   if (document.hidden) return;
   // gather player input
   if (me && me.alive) {
-    const kt = keyboardTarget();
-    inputs.set(me.id, { target: kt !== null ? kt : input.target, boost: boostHeld || keys.has(' ') || keys.has('shift') || keys.has('j'), skill: skillTap, item: itemTap });
+    keyboardSteer();
+    inputs.set(me.id, { target: input.target, boost: boostHeld || keys.has(' ') || keys.has('shift') || keys.has('j'), skill: skillTap, item: itemTap });
     skillTap = false; itemTap = false;
     if (tut && tut.lock) inputs.set(me.id, { target: null, boost: false, skill: false }); // tutorial: the ambush happens to you
   }
