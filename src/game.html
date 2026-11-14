@@ -1216,7 +1216,7 @@ const Sim = {
   stepHazards(dt, alive) {
     if (this.noFood) return; // not in the tutorial
     const H = this.haz || (this.haz = {
-      soap: null, soapCd: rnd(8, 16), trail: [], dryT: 0, alarmT: MAP.alarm ? 15 : 0, rushT: 0, darkCd: rnd(25, 45), warnT: 0, darkT: 0,
+      soap: null, soapCd: rnd(8, 16), trail: [], dryT: 0, alarmT: rnd(30, 60), rushT: 0, darkCd: rnd(25, 45), warnT: 0, darkT: 0,
       spider: MAP.under ? { x: (MAP.under.x0 + MAP.under.x1) / 2, z: (MAP.under.z0 + MAP.under.z1) / 2, dir: 0, state: 'walk', t: 0, tx: 0, tz: 0, victim: null, ball: null, len0: 0 } : null,
       webBalls: [],
     });
@@ -1256,7 +1256,8 @@ const Sim = {
     // 鬧鐘: rings every minute, and every snake rushes for 5 s
     if (MAP.alarm) {
       if (H.rushT > 0) H.rushT -= dt;
-      if ((H.alarmT += dt) >= MAP.alarm.every) { H.alarmT = 0; H.rushT = MAP.alarm.rush; this.events.push({ type: 'alarm' }); }
+      if ((H.alarmT -= dt) <= 0) { H.alarmT = rnd(40, 80); // rings at random: first 30–60 s in, then every 40–80 s
+        H.rushT = MAP.alarm.rush; this.events.push({ type: 'alarm' }); }
     }
     // 關燈: a 1.2 s flicker, then 8 s of darkness
     if (MAP.dark) {
@@ -3207,7 +3208,9 @@ function updateTraps(dt) {
       }
     }
   }
-  // per snake: stuck tissue bits and the bubble
+  // per snake: stuck tissue bits and the bubble. First drop views of snakes that are gone (a new game, or a snake removed
+  // from the list): otherwise their bubble (a lone rim) and paper bits stay in the scene where that snake used to be
+  if (trapViews.size) { const ids = new Set(Sim.snakes.map(s => s.id)); for (const [id, tv] of trapViews) if (!ids.has(id) || !Sim.snakes.find(s => s.id === id).alive) { for (const b of tv.bits) scene.remove(b); if (tv.bub) { scene.remove(tv.bub.g); tv.bub.tube.geometry.dispose(); } trapViews.delete(id); } }
   for (const s of Sim.snakes) {
     let tv = trapViews.get(s.id);
     const need = s.alive && (s.tissueT > 0 || s.bubbleT > 0);
