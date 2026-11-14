@@ -2343,7 +2343,7 @@ const input = { target: null, boost: false };
 const joy = document.getElementById('joy'), knob = document.getElementById('knob');
 let joyId = null, joyX = 0, joyY = 0;
 canvas.addEventListener('pointerdown', e => {
-  if (e.pointerType === 'mouse' && e.button === 0) mouseDbl(e);
+  if (e.pointerType !== 'mouse' || e.button === 0) mouseDbl(e); // left mouse button or a finger
   if (joyId !== null || (e.pointerType === 'mouse' && e.button !== 0)) return; // right button = item, not the stick
   joyId = e.pointerId; joyX = e.clientX; joyY = e.clientY;
   joy.style.left = joyX + 'px'; joy.style.top = joyY + 'px'; joy.hidden = false;
@@ -2386,17 +2386,18 @@ function skillDown() {
 }
 boostBtn.addEventListener('pointerdown', e => { e.preventDefault(); skillDown(); });
 const boostOff = () => { boostHeld = false; boostBtn.classList.remove('on'); };
-// desktop mouse: double-click the left button = skill (keep the second press held for hold skills such as boost);
-// a right click = use the item
-let lastLeft = 0, lastLX = 0, lastLY = 0, dblHeld = false;
+// double-click the left mouse button, or double-tap with a finger = skill (keep the second press held for hold skills
+// such as boost); a right click = use the item
+let lastLeft = 0, lastLX = 0, lastLY = 0, dblHeld = null;
 function mouseDbl(e) {
-  const now = performance.now();
-  if (running && now - lastLeft < 320 && Math.hypot(e.clientX - lastLX, e.clientY - lastLY) < 24) { lastLeft = 0; dblHeld = true; skillDown(); return; }
+  const now = performance.now(), near = e.pointerType === 'mouse' ? 24 : 48;
+  if (running && now - lastLeft < 320 && Math.hypot(e.clientX - lastLX, e.clientY - lastLY) < near) { lastLeft = 0; dblHeld = e.pointerId; skillDown(); return; }
   lastLeft = now; lastLX = e.clientX; lastLY = e.clientY;
 }
 window.addEventListener('contextmenu', e => { if (running) e.preventDefault(); });
 window.addEventListener('mousedown', e => { if (e.button === 2 && running && !cardPause && !(e.target.closest && e.target.closest('.overlay'))) { e.preventDefault(); itemTap = true; } });
-window.addEventListener('mouseup', e => { if (e.button === 0 && dblHeld) { dblHeld = false; boostOff(); } });
+const dblUp = e => { if (dblHeld !== null && e.pointerId === dblHeld) { dblHeld = null; boostOff(); } };
+window.addEventListener('pointerup', dblUp); window.addEventListener('pointercancel', dblUp);
 window.addEventListener('blur', boostOff);
 boostBtn.addEventListener('pointerup', boostOff); boostBtn.addEventListener('pointerleave', boostOff); boostBtn.addEventListener('pointercancel', boostOff);
 window.addEventListener('keydown', e => { if (cardPause) return; const k = e.key.toLowerCase(); if ((k === ' ' || k === 'shift' || k === 'j') && !e.repeat) skillTap = true; if ((k === 'e' || k === 'q' || k === 'k') && !e.repeat) itemTap = true; }); // skill: Space / Shift / J, item: E / Q / K
