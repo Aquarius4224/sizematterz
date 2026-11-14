@@ -20,3 +20,4 @@
 ## 音樂
 
 - 選單／開場：“Bit Shift” Kevin MacLeod (incompetech.com)，授權 CC BY 4.0：https://creativecommons.org/licenses/by/4.0/
+- 浴室：“Pixel Drift” Pecan Pie；臥室：“Threshold” Michael Grubb；野餐：“Zuppy Zoom Zone” Soundroll。Music from #Uppbeat (free for Creators!): https://uppbeat.io
