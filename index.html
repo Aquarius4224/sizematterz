@@ -273,8 +273,8 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <button class="gear" id="setBtn" aria-label="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .3.2.5.5.5h4c.3 0 .5-.2.5-.4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></button>
     <h1 data-i18n="title.sub">貪食屌</h1>
     <button class="play big" id="startBtn" data-i18n="menu.start">START</button>
-    <button class="sub" id="modeBtn"><span data-i18n="menu.mode">MODE</span> <small id="modeName">模式</small></button>
     <button class="sub" id="skinBtn"><span data-i18n="menu.skin">SKIN</span> <small><span data-i18n="menu.skinSub">造型</span> <span class="dot" id="skinDot"></span></small></button>
+    <button class="sub" id="typeBtn"><span data-i18n="menu.type">TYPE</span> <small id="typeName">類型</small></button>
     <button class="sub" id="skillBtn"><span data-i18n="menu.skill">SKILL</span> <small id="skillName">技能</small></button>
     <button class="sub" id="mapBtn"><span data-i18n="menu.map">MAP</span> <small id="mapName">地圖</small></button>
     <button class="back" id="tutBtn" data-i18n="menu.tut">再看一次教學</button>
@@ -289,8 +289,14 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
     <div class="swatches" id="swatches"></div>
     <h3 data-i18n="skin.pattern">花紋</h3>
     <div class="pats" id="pats"></div>
-    <h3 data-i18n="skin.special">特殊造型</h3>
-    <p class="hint" data-i18n="skin.specialHelp">每種都有天生的特性，可以和上面的顏色、花紋一起用。</p>
+    <button class="back" data-back data-i18n="back">‹ 返回</button>
+  </div>
+</div>
+
+<div class="overlay" id="typeOv" hidden>
+  <div class="card scroll">
+    <h2 data-i18n="type.title">選擇類型</h2>
+    <p data-i18n="skin.specialHelp">每種都有天生的特性，可以和上面的顏色、花紋一起用。</p>
     <div class="opts" id="specOpts"></div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
@@ -308,6 +314,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 <div class="overlay" id="modeOv" hidden>
   <div class="card scroll">
     <h2 data-i18n="mode.title">選擇模式</h2>
+    <p data-i18n="mode.help">選好就直接開始。</p>
     <div class="opts" id="modeOpts"></div>
     <button class="back" data-back data-i18n="back">‹ 返回</button>
   </div>
@@ -390,7 +397,7 @@ const I18N = {
     'menu.start': 'START', 'menu.skin': 'SKIN', 'menu.skinSub': '造型', 'menu.skill': 'SKILL', 'menu.skillSub': '技能 · {name}', 'menu.map': 'MAP', 'menu.mapSub': '地圖 · {name}',
     'menu.tut': '再看一次教學', 'menu.hint': '拖動螢幕控制方向。從別人尾巴後方 ±45° 撞進去，就能插入整條蛇。',
     'music.on': '🔊 音樂開', 'music.off': '🔇 音樂關', 'menu.credit': '音樂：“Bit Shift” Kevin MacLeod (incompetech.com) · CC BY 4.0', 'menu.lang': '🌐 語言：中文',
-    'skin.title': '選擇造型', 'skin.special': '特殊造型', 'skin.specialHelp': '每種都有天生的特性，可以和上面的顏色、花紋一起用。', 'spec.none': '無', 'spec.noneDesc': '一般的身體，沒有特性。', 'skin.basic': '基本顏色', 'skin.pattern': '花紋', 'back': '‹ 返回', 'aria.color': '顏色 {c}',
+    'skin.title': '選擇造型', 'skin.special': '特殊造型', 'skin.specialHelp': '每種都有天生的特性，可以和 SKIN 選的顏色、花紋一起用。', 'type.title': '選擇類型', 'menu.type': 'TYPE', 'menu.typeSub': '類型 · {name}', 'mode.help': '選好就直接開始。', 'spec.none': '無', 'spec.noneDesc': '一般的身體，沒有特性。', 'skin.basic': '基本顏色', 'skin.pattern': '花紋', 'back': '‹ 返回', 'aria.color': '顏色 {c}',
     'skill.title': '選擇技能', 'skill.help': '選一個帶進遊戲，用右下角的技能鍵發動。', 'skill.auto': '自動 · ', 'skill.cd': '冷卻 {n} 秒', 'skill.hold': '按住使用',
     'map.title': '選擇地圖',
     'menu.mode': 'MODE', 'menu.modeSub': '模式 · {name}', 'mode.title': '選擇模式', 'hud.alive': ' · 剩 {n} 條',
@@ -426,7 +433,7 @@ const I18N = {
     'menu.start': 'START', 'menu.skin': 'SKIN', 'menu.skinSub': '', 'menu.skill': 'SKILL', 'menu.skillSub': '{name}', 'menu.map': 'MAP', 'menu.mapSub': '{name}',
     'menu.tut': 'Replay tutorial', 'menu.hint': 'Drag the screen to steer. Ram into another snake’s tail from behind (within ±45°) to plug the whole snake.',
     'music.on': '🔊 Music on', 'music.off': '🔇 Music off', 'menu.credit': 'Music: “Bit Shift” Kevin MacLeod (incompetech.com) · CC BY 4.0', 'menu.lang': '🌐 Language: English',
-    'skin.title': 'Choose a skin', 'skin.special': 'Special bodies', 'skin.specialHelp': 'Each has a built-in trait. Works with any colour or pattern above.', 'spec.none': 'None', 'spec.noneDesc': 'A normal body with no trait.', 'skin.basic': 'Colours', 'skin.pattern': 'Patterns', 'back': '‹ Back', 'aria.color': 'Colour {c}',
+    'skin.title': 'Choose a skin', 'skin.special': 'Special bodies', 'skin.specialHelp': 'Each has a built-in trait. Works with any colour or pattern from SKIN.', 'type.title': 'Choose a type', 'menu.type': 'TYPE', 'menu.typeSub': '{name}', 'mode.help': 'Pick one and the game starts.', 'spec.none': 'None', 'spec.noneDesc': 'A normal body with no trait.', 'skin.basic': 'Colours', 'skin.pattern': 'Patterns', 'back': '‹ Back', 'aria.color': 'Colour {c}',
     'skill.title': 'Choose a skill', 'skill.help': 'Pick one to bring into the game. Use it with the skill button at the bottom right.', 'skill.auto': 'Auto · ', 'skill.cd': 'Cooldown {n}s', 'skill.hold': 'Hold to use',
     'map.title': 'Choose a map',
     'menu.mode': 'MODE', 'menu.modeSub': '{name}', 'mode.title': 'Choose a mode', 'hud.alive': ' · {n} left',
@@ -2269,7 +2276,7 @@ const modeName = m => T('mode.' + m), modeDesc = m => T('mode.' + m + 'Desc', { 
 const settings = { color: '#ff5a7a', skill: 'boost', pattern: null, map: 'bathroom', mode: 'classic', lang };
 try { const sv = JSON.parse(localStorage.getItem('snake3d.settings') || '{}'); if (SKINS.includes(sv.color)) settings.color = sv.color; if (SKILLS[sv.skill]) settings.skill = sv.skill; if (PATTERNS[sv.pattern]) settings.pattern = sv.pattern; if (MAPS[sv.map]) settings.map = sv.map; if (MODES.includes(sv.mode)) settings.mode = sv.mode; if (SPECIALS[sv.special]) settings.special = sv.special; if (typeof sv.cones === 'boolean') settings.cones = sv.cones; } catch (e) {}
 const saveSettings = () => { try { localStorage.setItem('snake3d.settings', JSON.stringify(settings)); } catch (e) {} };
-const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), set: document.getElementById('setOv'), ref: document.getElementById('refOv') };
+const ovs = { start: document.getElementById('startOv'), skin: document.getElementById('skinOv'), skill: document.getElementById('skillOv'), map: document.getElementById('mapOv'), mode: document.getElementById('modeOv'), type: document.getElementById('typeOv'), set: document.getElementById('setOv'), ref: document.getElementById('refOv') };
 const showOv = name => { for (const k in ovs) ovs[k].hidden = k !== name; if (name === 'start' && typeof BGM !== 'undefined') BGM.scene('menu'); };
 function renderMenus() {
   const bgOf = settings.pattern ? skinThumb(settings.pattern) : settings.color;
@@ -2283,7 +2290,7 @@ function renderMenus() {
   document.getElementById('mapName').textContent = T('menu.mapSub', { name: L(MAPS[settings.map], 'name') });
   for (const b of document.querySelectorAll('#specOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.sp === (settings.special || '')));
   for (const b of document.querySelectorAll('#modeOpts .opt')) b.setAttribute('aria-pressed', String(b.dataset.m === settings.mode));
-  document.getElementById('modeName').textContent = T('menu.modeSub', { name: modeName(settings.mode) });
+  document.getElementById('typeName').textContent = T('menu.typeSub', { name: settings.special && SPECIALS[settings.special] ? L(SPECIALS[settings.special], 'name') : T('spec.none') });
   updateSkillBtn();
 }
 const backSoon = () => setTimeout(() => showOv('start'), 160); // MODE / SKIN: a pick goes straight back to the menu (brief pause so the pressed state shows)
@@ -2310,7 +2317,7 @@ function buildMenus() {
   const md = document.getElementById('modeOpts'); md.innerHTML = '';
   for (const id of MODES) { const b = document.createElement('button'); b.className = 'opt'; b.dataset.m = id;
     b.innerHTML = `<b>${modeName(id)}</b><p>${modeDesc(id)}</p>`;
-    b.addEventListener('click', () => { settings.mode = id; saveSettings(); renderMenus(); backSoon(); }); md.appendChild(b); }
+    b.addEventListener('click', () => { settings.mode = id; saveSettings(); renderMenus(); showOv(null); newGame(); }); md.appendChild(b); } // START → pick a mode → the game starts
 }
 buildMenus();
 document.getElementById('langBtn').addEventListener('click', () => {
@@ -2318,7 +2325,7 @@ document.getElementById('langBtn').addEventListener('click', () => {
   applyStatic(); buildMenus(); renderMenus(); drawConeOpt(); if (typeof BGM !== 'undefined') BGM.redraw();
 });
 document.getElementById('mapBtn').addEventListener('click', () => showOv('map'));
-document.getElementById('modeBtn').addEventListener('click', () => showOv('mode'));
+document.getElementById('typeBtn').addEventListener('click', () => showOv('type'));
 document.getElementById('skinBtn').addEventListener('click', () => showOv('skin'));
 document.getElementById('skillBtn').addEventListener('click', () => showOv('skill'));
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', () => showOv('start'));
@@ -3159,7 +3166,7 @@ requestAnimationFrame(frame);
 
 renderMenus();
 { let done = false; try { done = !!localStorage.getItem(TUT_KEY); } catch (e) {} if (!done) startTutorial(); } // first play
-document.getElementById('startBtn').addEventListener('click', () => { showOv(null); newGame(); });
+document.getElementById('startBtn').addEventListener('click', () => showOv('mode')); // START opens the mode picker; picking a mode starts the game
 document.getElementById('menuBtn').addEventListener('click', () => { document.getElementById('overOv').hidden = true; renderMenus(); showOv('start'); });
 document.getElementById('againBtn').addEventListener('click', newGame);
 // keep attract camera on someone alive
