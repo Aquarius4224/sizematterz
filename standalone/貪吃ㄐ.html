@@ -428,7 +428,7 @@ const I18N = {
     'menu.settings': 'SETTINGS', 'menu.settingsSub': '設定', 'set.title': '設定', 'set.sfx': '音效', 'set.quick': '快速選卡', 'set.quickDesc': '無限模式選卡時，點一下卡片放大，再點一下放大的卡片就直接選它，不用按確定。', 'cards.again': '再點一下這張卡就選它', 'set.cone': '判定範圍', 'set.coneDesc': '在每條蛇的尾巴後方顯示可以插入的扇形範圍。', 'set.on': '開', 'set.off': '關', 'set.music': '音樂', 'set.ref': '參考資料 Reference', 'set.refDesc': '遊戲裡用到的音樂、程式庫、字型和美術。', 'ref.title': '參考資料', 'ref.music': '音樂', 'ref.musicLic': '授權', 'ref.engine': '3D 引擎', 'ref.font': '字型', 'ref.art': '美術與設計', 'ref.artDesc': '標題圖、道具 D 圖案、尾巴模型和地圖設計為本作原創。花紋造型由程式產生。', 'set.lang': '語言 Language', 'set.langName': '中文',
     'tut.step': '教學 {n} / 4', 'tut.skip': '跳過教學', 'tut.done': '前往主選單', 'tut.dummy': '練習蛇', 'tut.hunter': '偷襲蛇',
     'tut.1t': '移動', 'tut.1': '在螢幕上拖曳來控制方向（電腦：方向鍵、WASD，或按住滑鼠左鍵拖曳）。試著往上、下、左、右各走一段。',
-    'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：按住滑鼠右鍵或空白鍵）。加速會消耗體型喔。',
+    'tut.2t': '技能：加速', 'tut.2': '右下角出現了技能鍵，第一次先給你「加速」。按住它衝刺看看（電腦：滑鼠左鍵連點兩下並按住，或按住空白鍵、J）。加速會消耗體型喔。',
     'tut.3t': '插入', 'tut.3': '前面出現了一條不會動的蛇。從牠尾巴的正後方（地上扇形的判定範圍內）把頭撞進去，就能插入牠，讓自己變大！',
     'tut.3okt': '插入成功！', 'tut.3ok': '做得好，你成功插入牠了，身體也變大了。不過……',
     'tut.4t': '小心背後！', 'tut.4': '有一條蛇從你背後追上來了……',
@@ -464,7 +464,7 @@ const I18N = {
     'menu.settings': 'SETTINGS', 'menu.settingsSub': '', 'set.title': 'Settings', 'set.sfx': 'Sound effects', 'set.quick': 'Quick card pick', 'set.quickDesc': 'In Endless, tap a card to enlarge it, then tap the enlarged card to take it. No confirm button.', 'cards.again': 'Tap the card again to take it', 'set.cone': 'Hit zone', 'set.coneDesc': 'Show the fan behind each snake’s tail where you can plug it.', 'set.on': 'On', 'set.off': 'Off', 'set.music': 'Music', 'set.ref': 'Reference 參考資料', 'set.refDesc': 'Music, libraries, fonts and art used in the game.', 'ref.title': 'Reference', 'ref.music': 'Music', 'ref.musicLic': 'License', 'ref.engine': '3D engine', 'ref.font': 'Font', 'ref.art': 'Art & design', 'ref.artDesc': 'The title art, the D item token, the tail model and the map designs are original to this game. Pattern skins are generated in code.', 'set.lang': 'Language 語言', 'set.langName': 'English',
     'tut.step': 'Tutorial {n} / 4', 'tut.skip': 'Skip tutorial', 'tut.done': 'Main menu', 'tut.dummy': 'Dummy', 'tut.hunter': 'Sneaker',
     'tut.1t': 'Move', 'tut.1': 'Drag on the screen to steer (computer: arrow keys, WASD, or hold the left mouse button and drag). Try going up, down, left and right.',
-    'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: hold the right mouse button or Space). Boosting costs you size.',
+    'tut.2t': 'Skill: Boost', 'tut.2': 'A skill button just appeared at the bottom right. Your first one is Boost. Hold it to dash (computer: double-click and hold the left mouse button, or hold Space or J). Boosting costs you size.',
     'tut.3t': 'Plug', 'tut.3': 'A snake that doesn’t move has appeared ahead. Ram your head into its tail from right behind (inside the fan-shaped zone on the ground) to plug it and grow!',
     'tut.3okt': 'Plugged!', 'tut.3ok': 'Nice, you plugged it and grew bigger. But…',
     'tut.4t': 'Watch your back!', 'tut.4': 'A snake is coming up behind you…',
@@ -2342,7 +2342,8 @@ const input = { target: null, boost: false };
 const joy = document.getElementById('joy'), knob = document.getElementById('knob');
 let joyId = null, joyX = 0, joyY = 0;
 canvas.addEventListener('pointerdown', e => {
-  if (joyId !== null || (e.pointerType === 'mouse' && e.button !== 0)) return; // right button = skill, not the stick
+  if (e.pointerType === 'mouse' && e.button === 0) mouseDbl(e);
+  if (joyId !== null || (e.pointerType === 'mouse' && e.button !== 0)) return; // right button = item, not the stick
   joyId = e.pointerId; joyX = e.clientX; joyY = e.clientY;
   joy.style.left = joyX + 'px'; joy.style.top = joyY + 'px'; joy.hidden = false;
   knob.style.transform = 'translate(0,0)';
@@ -2384,10 +2385,17 @@ function skillDown() {
 }
 boostBtn.addEventListener('pointerdown', e => { e.preventDefault(); skillDown(); });
 const boostOff = () => { boostHeld = false; boostBtn.classList.remove('on'); };
-// desktop: the right mouse button works like the skill button (hold / tap)
+// desktop mouse: double-click the left button = skill (keep the second press held for hold skills such as boost);
+// a right click = use the item
+let lastLeft = 0, lastLX = 0, lastLY = 0, dblHeld = false;
+function mouseDbl(e) {
+  const now = performance.now();
+  if (running && now - lastLeft < 320 && Math.hypot(e.clientX - lastLX, e.clientY - lastLY) < 24) { lastLeft = 0; dblHeld = true; skillDown(); return; }
+  lastLeft = now; lastLX = e.clientX; lastLY = e.clientY;
+}
 window.addEventListener('contextmenu', e => { if (running) e.preventDefault(); });
-window.addEventListener('mousedown', e => { if (e.button === 2 && running && !(e.target.closest && e.target.closest('.overlay'))) { e.preventDefault(); skillDown(); } });
-window.addEventListener('mouseup', e => { if (e.button === 2) boostOff(); });
+window.addEventListener('mousedown', e => { if (e.button === 2 && running && !cardPause && !(e.target.closest && e.target.closest('.overlay'))) { e.preventDefault(); itemTap = true; } });
+window.addEventListener('mouseup', e => { if (e.button === 0 && dblHeld) { dblHeld = false; boostOff(); } });
 window.addEventListener('blur', boostOff);
 boostBtn.addEventListener('pointerup', boostOff); boostBtn.addEventListener('pointerleave', boostOff); boostBtn.addEventListener('pointercancel', boostOff);
 window.addEventListener('keydown', e => { if (cardPause) return; const k = e.key.toLowerCase(); if ((k === ' ' || k === 'shift' || k === 'j') && !e.repeat) skillTap = true; if ((k === 'e' || k === 'q' || k === 'k') && !e.repeat) itemTap = true; }); // skill: Space / Shift / J, item: E / Q / K
