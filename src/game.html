@@ -70,20 +70,46 @@ body {
 #itemBtn img { width: 34px; height: 34px; pointer-events: none; }
 #itemBtn:disabled { cursor: default; }
 #itemBtn.two::after { content: '2'; position: absolute; right: -4px; top: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--sun); color: #3a2a00; font: 700 11px/18px var(--font-display); text-align: center; }
-#cardOv .card { width: min(calc(100vw - 24px), 760px); max-width: none; box-sizing: border-box; max-height: calc(100vh - 24px); overflow-y: auto; }
-#cardOv h2 { margin-bottom: 4px; }
-.cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
-@media (max-width: 560px) { .cards3 { grid-template-columns: 1fr; gap: 10px; } }
-.gcard { --rc: #9aa0a8; position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px 14px 12px; border-radius: 16px; border: 3px solid var(--rc); background: #fff; cursor: pointer; font: inherit; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,.12); transition: transform .12s ease; }
-.gcard:hover, .gcard:focus-visible { transform: translateY(-3px); }
-.gcard .rar { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--rc); }
-.gcard b { font-size: 18px; }
-.gcard p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
-.gcard .stk { font-size: 11px; color: var(--ink-soft); margin-top: auto; }
-.gcard.rare { --rc: #3d8bfd; background: #f2f7ff; }
-.gcard.legend { --rc: #d9a400; background: linear-gradient(135deg, #fff8dc, #fff 45%, #fff3c4); animation: legendGlow 1.6s ease-in-out infinite; }
-.gcard.curse { --rc: #8b5cf6; background: #f6f2ff; }
-@keyframes legendGlow { 50% { box-shadow: 0 0 0 3px rgba(217,164,0,.35), 0 6px 22px rgba(217,164,0,.45); } }
+#cardOv { overflow-y: auto; }
+.cardStage { --cw: clamp(84px, min(29vw, 22vh), 150px); --ch: calc(var(--cw) * 2.02); width: min(100%, 520px); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: max(16px, env(safe-area-inset-top, 0px)) 0 max(16px, env(safe-area-inset-bottom, 0px)); color: var(--paper); text-align: center; font-family: var(--font-display); }
+.cardHead { display: grid; gap: 4px; }
+.cardRound { font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--sun); }
+.cardHead h2 { margin: 0; font-size: 28px; color: var(--paper); }
+.cardHead p { margin: 0; font-size: 14px; line-height: 1.5; color: #c9e4df; font-family: var(--font-body); }
+.fan { position: relative; width: 100%; height: calc(var(--ch) * 1.45 + 46px); }
+.gcard { --rc: #a7b1bb; --art: #eef2f4; --ic: #4f5a64; --tagBg: #fff; --tagFg: #4f5a64; --sub: var(--ink-soft);
+  position: absolute; left: 50%; bottom: 34px; width: var(--cw); height: var(--ch); margin-left: calc(var(--cw) / -2); box-sizing: border-box;
+  display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 3px solid var(--rc); border-radius: calc(var(--cw) * .125); background: #fff; color: var(--ink);
+  font-family: var(--font-display); text-align: center; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  transform-origin: 50% 100%; transition: transform .3s cubic-bezier(.2,.8,.3,1.2), opacity .3s ease; -webkit-tap-highlight-color: transparent; }
+.gcard .art { position: relative; height: 38%; flex-shrink: 0; background: var(--art); display: flex; align-items: center; justify-content: center; }
+.gcard .art svg { width: 48%; height: auto; fill: none; stroke: var(--ic); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.gcard .rar { position: absolute; top: 6%; left: 6%; font-size: calc(var(--cw) * .09); font-weight: 700; letter-spacing: .06em; color: var(--tagFg); background: var(--tagBg); border-radius: 6px; padding: 1px 5px; }
+.gcard b { font-size: calc(var(--cw) * .14); padding: 9% 5% 3%; line-height: 1.15; }
+.gcard p { margin: 0; padding: 0 7%; font-size: calc(var(--cw) * .1); line-height: 1.45; color: var(--sub); font-family: var(--font-body); }
+.gcard .stk { margin-top: auto; padding-bottom: 7%; font-size: calc(var(--cw) * .085); color: var(--sub); opacity: .85; }
+.gcard.rare { --rc: #3d8bfd; --art: #dce9ff; --ic: #2a6fe0; --tagBg: #2a6fe0; --tagFg: #fff; background: #f2f7ff; box-shadow: inset 0 0 0 2px #fff, 0 6px 16px rgba(0,0,0,.3); }
+.gcard.legend { --rc: #d9a400; --art: #ffe9a8; --ic: #8a6400; --tagBg: #ffd166; --tagFg: #3a2a00; border-width: 4px; background: #fffaf0; animation: legendGlow 1.6s ease-in-out infinite; }
+.gcard.curse { --rc: #8b5cf6; --art: #3d2a58; --ic: #c4a8ff; --tagBg: #c4a8ff; --tagFg: #2a1d3d; --sub: #d9ccf5; background: #2a1d3d; color: #f4eeff; }
+.gcard.f0 { transform: translate(calc(var(--cw) * -.7), calc(var(--cw) * .23)) rotate(-15deg); z-index: 1; }
+.gcard.f1 { transform: none; z-index: 2; }
+.gcard.f2 { transform: translate(calc(var(--cw) * .7), calc(var(--cw) * .23)) rotate(15deg); z-index: 3; }
+.fan.has .gcard { opacity: .4; }
+.fan.has .gcard.f0 { transform: translate(calc(var(--cw) * -.7), calc(var(--cw) * .23 + 18px)) rotate(-15deg); }
+.fan.has .gcard.f1 { transform: translateY(18px); }
+.fan.has .gcard.f2 { transform: translate(calc(var(--cw) * .7), calc(var(--cw) * .23 + 18px)) rotate(15deg); }
+.fan.has .gcard.picked { opacity: 1; z-index: 10; transform: translateY(-6px) scale(1.45); }
+.cardActs { min-height: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cardOk { min-width: 200px; height: 52px; border: 0; border-radius: 26px; background: var(--sun); color: #3a2a00; font: 700 18px var(--font-display); cursor: pointer; box-shadow: 0 4px 0 #c99a2e, 0 8px 18px rgba(0,0,0,.3); }
+.cardOk:active { transform: translateY(2px); box-shadow: 0 2px 0 #c99a2e, 0 4px 10px rgba(0,0,0,.3); }
+.cardBack { border: 0; background: none; color: #c9e4df; font: 500 13px var(--font-body); padding: 8px 12px; cursor: pointer; }
+.cardHint { margin: 14px 0 0; font-size: 13px; color: #9cc3bc; font-family: var(--font-body); }
+.cardOwned { width: calc(100% - 8px); box-sizing: border-box; background: rgba(243,251,249,.1); border-radius: 14px; padding: 10px 14px; display: grid; gap: 8px; text-align: left; font-size: 12px; letter-spacing: .06em; color: #c9e4df; }
+.cardOwned .chips { display: flex; flex-wrap: wrap; gap: 6px; letter-spacing: 0; }
+.cardOwned .chips span { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1.5px solid #a7b1bb; color: var(--paper); font-family: var(--font-body); }
+.cardOwned .chips .rare { border-color: #6aa7ff; } .cardOwned .chips .legend { border-color: #ffd166; } .cardOwned .chips .curse { border-color: #b49bff; }
+@media (max-height: 520px) { .cardStage { --cw: clamp(64px, 18vh, 150px); gap: 4px; } .cardHead p, .cardOwned { display: none; } .cardHead h2 { font-size: 22px; } .fan { height: calc(var(--ch) * 1.45 + 30px); } .gcard { bottom: 22px; } .cardActs { min-height: 60px; } .cardHint { margin-top: 4px; } }
+@keyframes legendGlow { 0%, 100% { box-shadow: 0 0 0 3px rgba(255,209,102,.35), 0 0 14px rgba(255,209,102,.4); } 50% { box-shadow: 0 0 0 3px rgba(255,209,102,.6), 0 0 26px rgba(255,209,102,.75); } }
 #itemBtn.full { box-shadow: 0 0 0 3px var(--sun), 0 3px 12px rgba(0,0,0,.18); animation: itemPop .35s ease-out; }
 @keyframes itemPop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: none; } }
 body.tut #itemBtn { display: none; }
@@ -303,10 +329,19 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 </div>
 
 <div class="overlay" id="cardOv" hidden>
-  <div class="card">
-    <h2 id="cardTitle" data-i18n="cards.title">選一張卡</h2>
-    <p class="statline" id="cardSub"></p>
-    <div class="cards3" id="cardRow"></div>
+  <div class="cardStage">
+    <div class="cardHead">
+      <div class="cardRound" id="cardRound"></div>
+      <h2 id="cardTitle" data-i18n="cards.title">選一張卡</h2>
+      <p id="cardSub"></p>
+    </div>
+    <div class="fan" id="cardRow"></div>
+    <div class="cardActs">
+      <button class="cardOk" id="cardOk" data-i18n="cards.ok" hidden>確定</button>
+      <button class="cardBack" id="cardBack" data-i18n="cards.back" hidden>放回去，再看看</button>
+      <p class="cardHint" id="cardHint" data-i18n="cards.hint">點一張卡片拿起來看清楚</p>
+    </div>
+    <div class="cardOwned" id="cardOwned"><div data-i18n="cards.owned">目前的卡片</div><div class="chips" id="cardChips"></div></div>
   </div>
 </div>
 
@@ -351,9 +386,9 @@ const I18N = {
     'mode.br': '吃雞', 'mode.brDesc': '開場 {n} 條蛇，被插入就淘汰、不會重生，最後剩下的那一條獲勝。',
     'over.rank': '第 {rank} 名（共 {n} 條）',
     'mode.endless': '無限', 'mode.endlessDesc': '長度到達門檻（24 起，每輪漲得更多）就從 3 張卡選 1 張，然後縮回開局大小繼續，直到被插入為止。',
-    'hud.round': ' · 第 {n} 輪 · 目標 {len}', 'cards.title': '選一張卡', 'cards.sub': '到達 {len}！選一張帶進下一輪',
+    'hud.round': ' · 第 {n} 輪 · 目標 {len}', 'cards.title': '選一張卡片', 'cards.sub': '長度到 {len} 了！選好後會甩回起始大小，帶著效果繼續。', 'cards.round': '第 {n} 輪', 'cards.ok': '確定', 'cards.back': '放回去，再看看', 'cards.hint': '點一張卡片拿起來看清楚', 'cards.owned': '目前的卡片',
     'rarity.common': '一般', 'rarity.rare': '稀有', 'rarity.legend': '傳說', 'rarity.curse': '詛咒',
-    'card.stack': '已有 {n} / {max}', 'card.noStack': '不可疊加', 'card.none': '無',
+    'card.stack': '已有 {n} / {max}', 'card.noStack': '限 1 張', 'card.none': '無',
     'toast.card': '獲得「{name}」！', 'toast.revive': '九命怪貓！你復活了', 'toast.squeeze': '緊實！把「{name}」擠出去了', 'toast.reverse': '反插！你吃掉了「{name}」',
     'over.endless': '撐了 {n} 輪 · 卡片：{cards}', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': '你是最後剩下的一條 · 長度 {len} · 插入 {n} 條',
     'over.title': '你被插入了', 'over.by': '你被「{name}」從尾巴插入了', 'over.stats': '最長 {len} · 插入 {n} 條', 'over.menu': '主選單', 'over.again': '再來一局',
@@ -387,9 +422,9 @@ const I18N = {
     'mode.br': 'Battle Royale', 'mode.brDesc': '{n} snakes start. Get plugged and you are out for good. The last snake left wins.',
     'over.rank': 'Placed #{rank} of {n}',
     'mode.endless': 'Endless', 'mode.endlessDesc': 'Reach the goal length (24, rising faster each round) to pick 1 of 3 cards, then shrink back and keep going until you get plugged.',
-    'hud.round': ' · Round {n} · Goal {len}', 'cards.title': 'Pick a card', 'cards.sub': 'You hit {len}! Take one into the next round',
+    'hud.round': ' · Round {n} · Goal {len}', 'cards.title': 'Pick a card', 'cards.sub': 'You hit {len}! You’ll shrink back to the start size and keep the effect.', 'cards.round': 'ROUND {n}', 'cards.ok': 'Confirm', 'cards.back': 'Put it back', 'cards.hint': 'Tap a card to take a closer look', 'cards.owned': 'Your cards',
     'rarity.common': 'COMMON', 'rarity.rare': 'RARE', 'rarity.legend': 'LEGENDARY', 'rarity.curse': 'CURSED',
-    'card.stack': 'Have {n} / {max}', 'card.noStack': 'Doesn’t stack', 'card.none': 'none',
+    'card.stack': 'Have {n} / {max}', 'card.noStack': 'Max 1', 'card.none': 'none',
     'toast.card': 'Got {name}!', 'toast.revive': 'Nine Lives! You’re back', 'toast.squeeze': 'Tight! Squeezed {name} out', 'toast.reverse': 'Reversal! You ate {name}',
     'over.endless': 'Lasted {n} rounds · Cards: {cards}', 'win.title': '🏆 Wiener Wiener Sausage Dinner!', 'win.stats': 'Last snake standing · Length {len} · Plugged {n}',
     'over.title': 'You got plugged', 'over.by': '{name} plugged you from behind', 'over.stats': 'Longest {len} · Plugged {n}', 'over.menu': 'Main menu', 'over.again': 'Play again',
@@ -472,6 +507,7 @@ const CARDS = [
   { id: 'bigOne', r: 'legend', max: 1, name: '巨根', desc: '每輪回歸時保留 25% 的長度', name_en: 'Big One', desc_en: 'Keep 25% of your length each round' },
   { id: 'flood', r: 'legend', max: 1, name: '大洪水', desc: '回歸時甩出的液體留在地上 20 秒，變成大片減速區', name_en: 'Flood', desc_en: 'Your round-end splash stays 20s as a big slow zone' },
   { id: 'omni', r: 'legend', max: 1, name: '萬能套', desc: '保險套期間撞到別人尾巴，不管角度都能直接插入', name_en: 'Universal Fit', desc_en: 'With a condom on, plug tails from any angle' },
+  { id: 'docking', r: 'legend', max: 1, name: 'Docking', desc: '頭對頭撞上別人的頭時，也能直接插入把對方吃掉', name_en: 'Docking', desc_en: 'Ram another snake head-on to plug them through the head' },
   { id: 'tightHole', r: 'curse', max: 1, name: '菊花緊縮', desc: '別人插入你的判定範圍縮小成 ±30°，但轉向速度 -20%', name_en: 'Clenched', desc_en: 'Others plug you only within ±30°, but turn 20% slower' },
   { id: 'glass', r: 'curse', max: 1, name: '玻璃大砲', desc: '插入別人時獲得的長度 +50%，但保險套對你無效', name_en: 'Glass Cannon', desc_en: '+50% length from plugs, but condoms do nothing for you' },
   { id: 'sprinter', r: 'curse', max: 1, name: '暴衝', desc: '移動速度一直 +15%，但轉向速度 -25%', name_en: 'Hothead', desc_en: 'Always 15% faster, but turn 25% slower' },
@@ -1044,6 +1080,11 @@ const Sim = {
             }
             this.absorb(A, B); continue;
           }
+        }
+        // 1b) Docking card: a head-on hit into the other snake's head also plugs it
+        if (mod(A, 'docking') && !B.merge && B.invuln <= 0 && !(B.bubbleT > 0) && !(B.guardT > 0) && !(A.ejectT > 0)) {
+          const hx = A.x - B.x, hz = A.z - B.z, hd = Math.hypot(hx, hz), bfx = Math.cos(B.dir), bfz = Math.sin(B.dir);
+          if (hd < A.r * 1.3 * headK(A) + B.r * 1.3 * headK(B) && fx * bfx + fz * bfz < -0.5 && (hd < 1e-6 || (hx * bfx + hz * bfz) / hd > 0.5)) { this.devour(A, B); break; } // facing each other, A in front of B's snout
         }
         // 2) any other contact: soft push-out (head vs B's whole body, incl. head)
         if (mod(A, 'slippery')) continue; // 滑溜身體: slides right through
@@ -2620,19 +2661,66 @@ function drawCards() {
   pity = hand.some(c => c.r === 'rare' || c.r === 'legend') ? 0 : pity + 1;
   return hand.sort(() => Math.random() - 0.5);
 }
+const CARD_ICONS = {
+  stamina: '<rect x="7" y="15" width="30" height="18" rx="4"/><path d="M41 21v6M24 18l-5 7h6l-4 6"/>',
+  agile: '<path d="M14 38c-4-6-4-14 2-20s14-6 18-2"/><path d="M30 10l5 6-7 2M20 30c2-4 6-6 10-5"/>',
+  appetite: '<path d="M14 8v32M10 8v8a4 4 0 0 0 8 0V8"/><path d="M34 40V8c-5 2-7 8-7 15h7"/>',
+  magnet: '<path d="M10 8h8v16a6 6 0 0 0 12 0V8h8v16a14 14 0 0 1-28 0z"/><path d="M10 15h8M30 15h8"/>',
+  condomPlus: '<circle cx="20" cy="27" r="12"/><circle cx="20" cy="27" r="6"/><path d="M38 6v12M32 12h12"/>',
+  lubePlus: '<path d="M18 6h12v6l4 6v22a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2V18l4-6z"/><path d="M24 24c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z"/>',
+  quickCd: '<circle cx="24" cy="27" r="14"/><path d="M24 27l6-6M20 6h8M24 6v7"/>',
+  antiSlip: '<path d="M6 32V16l10 2 6 7 16 4a4 4 0 0 1 4 4v3H6z"/><path d="M6 40h36M12 40v-4M20 40v-4M28 40v-4M36 40v-4"/>',
+  headStart: '<path d="M6 40h10V30h10V20h10"/><path d="M30 8h10v10M40 8L27 21"/>',
+  thickSkin: '<path d="M24 6l14 5v11c0 9-6 16-14 20-8-4-14-11-14-20V11z"/><path d="M18 24l4 4 8-8"/>',
+  wide: '<path d="M24 40L8 14M24 40L40 14M11 19a22 22 0 0 1 26 0"/><circle cx="24" cy="40" r="2"/>',
+  pocket: '<rect x="5" y="14" width="17" height="22" rx="4"/><rect x="26" y="14" width="17" height="22" rx="4"/><path d="M13.5 21v8M9.5 25h8M34.5 21v8M30.5 25h8"/>',
+  loot: '<path d="M14 18h20l4 22H10z"/><path d="M19 18a5 5 0 0 1 10 0M24 25v9M19.5 29.5h9"/>',
+  bluePill: '<circle cx="24" cy="24" r="15"/><path d="M13 24h22"/>',
+  tissueTrail: '<rect x="8" y="24" width="32" height="16" rx="3"/><path d="M17 24c0-7 5-10 7-16 2 6 7 9 7 16"/>',
+  tight: '<path d="M4 24h12M10 18l6 6-6 6M44 24H32M38 18l-6 6 6 6M24 12v24"/>',
+  autoCondom: '<circle cx="24" cy="24" r="7"/><path d="M39 28a15 15 0 1 1-2-12"/><path d="M39 6v10H29"/>',
+  slippery: '<path d="M6 30c5-6 9-6 14 0s9 6 14 0 7-4 8-3M6 38c5-6 9-6 14 0s9 6 14 0"/><path d="M30 8c3 4 5 7 5 9a5 5 0 0 1-10 0c0-2 2-5 5-9z"/>',
+  nineLives: '<path d="M10 40V20l6-9 4 8h8l4-8 6 9v20z"/><path d="M19 28h.01M29 28h.01M21 34c2 1.5 4 1.5 6 0M24 3v4M20 5h8"/>',
+  reverse: '<path d="M8 16h30l-7-7M40 32H10l7 7"/>',
+  bigOne: '<path d="M8 34L6 16l10 8 8-14 8 14 10-8-2 18z"/><path d="M10 41h28"/>',
+  flood: '<path d="M4 34c4-4 8-4 12 0s8 4 12 0 8-4 12 0M4 42c4-4 8-4 12 0s8 4 12 0 8-4 12 0"/><path d="M24 4c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z"/>',
+  omni: '<circle cx="24" cy="24" r="6"/><path d="M24 6a18 18 0 1 1-16 10"/><path d="M4 11l4 6 6-3"/>',
+  docking: '<path d="M3 17h13a7 7 0 0 1 0 14H3"/><path d="M45 17H32a7 7 0 0 0 0 14h13"/><path d="M24 9v5M24 34v5"/>',
+  tightHole: '<path d="M24 40L19 10M24 40L29 10"/><path d="M6 20l8 4M42 20l-8 4"/>',
+  glass: '<path d="M15 6h18l-2 14a7 7 0 0 1-14 0z"/><path d="M24 27v12M16 41h16M20 9l4 5-2 4"/>',
+  sprinter: '<path d="M27 4L12 26h11l-4 18 17-24H25z"/>',
+  premature: '<path d="M16 6c4 6 6 10 6 13a6 6 0 0 1-12 0c0-3 2-7 6-13zM32 16c3 4 4 7 4 9a4 4 0 0 1-8 0c0-2 1-5 4-9zM24 31c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z"/>',
+};
+let cardPick = null;
+function setCardPick(b, c) {
+  const row = document.getElementById('cardRow');
+  cardPick = cardPick && cardPick.c === c ? null : { b, c };
+  row.classList.toggle('has', !!cardPick);
+  for (const x of row.children) x.classList.toggle('picked', !!cardPick && x === cardPick.b);
+  document.getElementById('cardOk').hidden = document.getElementById('cardBack').hidden = !cardPick;
+  document.getElementById('cardHint').hidden = !!cardPick;
+}
 function openCards() {
-  cardPause = true; boostHeld = false;
-  const row = document.getElementById('cardRow'); row.innerHTML = '';
+  cardPause = true; boostHeld = false; cardPick = null;
+  const row = document.getElementById('cardRow'); row.innerHTML = ''; row.classList.remove('has');
+  document.getElementById('cardRound').textContent = T('cards.round', { n: round + 1 });
   document.getElementById('cardSub').textContent = T('cards.sub', { len: me.maxLen });
-  for (const c of drawCards()) {
+  const hand = drawCards(), slots = hand.length === 1 ? [1] : hand.length === 2 ? [0, 2] : [0, 1, 2];
+  hand.forEach((c, i) => {
     const have = c.id === 'nineLives' ? (me.mods.lives || 0) : mod(me, c.id);
-    const b = document.createElement('button'); b.className = 'gcard ' + c.r;
-    b.innerHTML = `<span class="rar">${T('rarity.' + c.r)}</span><b>${L(c, 'name')}</b><p>${L(c, 'desc')}</p><span class="stk">${c.max > 1 ? T('card.stack', { n: have, max: c.max }) : T('card.noStack')}</span>`;
-    b.addEventListener('click', () => pickCard(c));
+    const b = document.createElement('button'); b.className = 'gcard ' + c.r + ' f' + slots[i];
+    b.innerHTML = `<div class="art"><span class="rar">${T('rarity.' + c.r)}</span><svg viewBox="0 0 48 48" aria-hidden="true">${CARD_ICONS[c.id] || ''}</svg></div><b>${L(c, 'name')}</b><p>${L(c, 'desc')}</p><span class="stk">${c.max > 1 ? T('card.stack', { n: have, max: c.max }) : T('card.noStack')}</span>`;
+    b.addEventListener('click', () => setCardPick(b, c));
     row.appendChild(b);
-  }
+  });
+  document.getElementById('cardOk').hidden = document.getElementById('cardBack').hidden = true; document.getElementById('cardHint').hidden = false;
+  const ids = Object.keys(me.mods || {}).filter(k => cardOf(k));
+  document.getElementById('cardOwned').hidden = !ids.length;
+  document.getElementById('cardChips').innerHTML = ids.map(k => { const c = cardOf(k); return `<span class="${c.r}">${L(c, 'name')}${me.mods[k] > 1 ? ' ×' + me.mods[k] : ''}</span>`; }).join('');
   document.getElementById('cardOv').hidden = false;
 }
+document.getElementById('cardOk').addEventListener('click', () => { if (cardPick) pickCard(cardPick.c); });
+document.getElementById('cardBack').addEventListener('click', () => { if (cardPick) setCardPick(cardPick.b, cardPick.c); });
 function pickCard(c) {
   if (!cardPause) return;
   me.mods[c.id] = (me.mods[c.id] || 0) + 1;
