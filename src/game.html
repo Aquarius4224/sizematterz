@@ -970,7 +970,7 @@ const Sim = {
       for (let i = 1; i < n - 1; i++) {
         const a = o[Math.max(0, i - 2)], e = o[Math.min(n - 1, i + 2)]; let tx = e.x - a.x, tz = e.z - a.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l; // wider tangent: the short head segment no longer wobbles it
         const u = arc[i] / tot, w = 4 * u * (1 - u) * c;
-        b[i] = { x: o[i].x + tz * w, z: o[i].z - tx * w };
+        b[i] = { x: o[i].x - tz * w, z: o[i].z + tx * w }; // v102: Chiu saw it bowed the wrong way; flipped so it curves like a banana bending right
       }
     }
     s.body = b;
