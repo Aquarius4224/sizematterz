@@ -2969,15 +2969,16 @@ function makeHazards() {
   if (hazRoot) { scene.remove(hazRoot); hazRoot.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
   hazRoot = new THREE.Group(); scene.add(hazRoot); hazFx.rings = [];
   const H = hazRoot.userData;
-  if (MAP.soap) { // pink bar of soap with a few bubbles on it, and a pool of foam patches for its trail
+  if (MAP.soap) { // pink bar of soap with a few bubbles on it, and a translucent ribbon for its trail
     const g = new THREE.Group(), bar = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 14), new THREE.MeshStandardMaterial({ color: '#ffc4dc', roughness: 0.2 }));
     bar.scale.set(2.7, 1.0, 1.7); bar.position.y = 1.0; bar.castShadow = true; g.add(bar);
     const bub = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.1, transparent: true, opacity: 0.75 });
     for (const [x, z, r] of [[-0.8, 0.4, 0.45], [0.4, -0.3, 0.6], [1.2, 0.5, 0.35]]) { const b = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), bub); b.position.set(x, 1.9, z); g.add(b); }
     g.visible = false; hazRoot.add(g); H.soap = g;
-    const foam = hazTex(128, 128, (c, w, h) => { for (let i = 0; i < 26; i++) { const x = 20 + Math.random() * 88, y = 20 + Math.random() * 88, r = 5 + Math.random() * 13; c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill(); c.strokeStyle = 'rgba(200,225,255,.9)'; c.lineWidth = 2; c.stroke(); } });
-    const fg = new THREE.PlaneGeometry(4.6, 4.6).rotateX(-Math.PI / 2);
-    H.foam = []; for (let i = 0; i < 48; i++) { const m = new THREE.Mesh(fg, new THREE.MeshBasicMaterial({ map: foam, transparent: true, depthWrite: false, opacity: 0 })); m.visible = false; m.renderOrder = 2; hazRoot.add(m); H.foam.push(m); }
+    // trail: one flat translucent ribbon along the soap's path (quads per segment, vertex alpha fades the old end)
+    const N = 48, tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 12), 3)); tg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 16), 4));
+    const ix = []; for (let k = 0; k < N; k++) ix.push(k * 4, k * 4 + 1, k * 4 + 2, k * 4 + 1, k * 4 + 3, k * 4 + 2); tg.setIndex(ix); tg.setDrawRange(0, 0);
+    H.trail = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide })); H.trail.frustumCulled = false; H.trail.renderOrder = 2; hazRoot.add(H.trail);
   }
   const D = MAP.dryer;
   if (D) { // a mint hair dryer lying on the floor, nozzle pointing into the room (local +x = backwards from the nozzle)
@@ -3035,7 +3036,16 @@ function updateHazards(dt, t) {
     const sp = S && S.soap; H.soap.visible = !!sp;
     if (sp) { H.soap.position.set(sp.x, groundY(sp.x, sp.z), sp.z); H.soap.rotation.y = -sp.a + Math.sin(t * 9) * 0.15; H.soap.scale.setScalar(Math.max(0.01, Math.min(1, sp.t / 0.3, (sp.life - sp.t) / 0.4))); }
     const tr = S ? S.trail : [];
-    for (let i = 0; i < H.foam.length; i++) { const m = H.foam[i], p = tr[tr.length - 1 - i]; m.visible = !!p; if (!p) continue; m.position.set(p.x, groundY(p.x, p.z) + 0.06, p.z); m.rotation.y = -p.a + i; m.material.opacity = 0.75 * Math.min(1, (8 - p.t) / 1.5, p.t / 0.2); }
+    { const pts = tr.slice(-47); if (sp) pts.push({ x: sp.x, z: sp.z, t: 0 });
+      const P = H.trail.geometry.attributes.position, C = H.trail.geometry.attributes.color, pa = P.array, ca = C.array, W = 1.7; let q = 0;
+      const gap = k => k < 0 || k + 1 >= pts.length || Math.hypot(pts[k + 1].x - pts[k].x, pts[k + 1].z - pts[k].z) > 5; // no link between k and k+1
+      const nrm = k => { const a = pts[gap(k - 1) ? k : k - 1], c = pts[gap(k) ? k : k + 1], dx = c.x - a.x, dz = c.z - a.z, l = Math.hypot(dx, dz) || 1; return [-dz / l * W, dx / l * W]; };
+      const al = p => 0.5 * Math.max(0, Math.min(1, (8 - p.t) / 1.5));
+      for (let k = 0; k + 1 < pts.length && q < 48; k++) { const p0 = pts[k], p1 = pts[k + 1]; if (gap(k)) continue;
+        const n0 = nrm(k), n1 = nrm(k + 1), y0 = groundY(p0.x, p0.z) + 0.07, y1 = groundY(p1.x, p1.z) + 0.07, o = q * 12, c = q * 16;
+        pa.set([p0.x + n0[0], y0, p0.z + n0[1], p0.x - n0[0], y0, p0.z - n0[1], p1.x + n1[0], y1, p1.z + n1[1], p1.x - n1[0], y1, p1.z - n1[1]], o);
+        const a0 = al(p0), a1 = al(p1); ca.set([1, .8, .9, a0, 1, .8, .9, a0, 1, .8, .9, a1, 1, .8, .9, a1], c); q++; }
+      P.needsUpdate = true; C.needsUpdate = true; H.trail.geometry.setDrawRange(0, q * 6); H.trail.visible = q > 0; }
   }
   if (H.zone) {
     const D = MAP.dryer, d0 = S ? S.dryT : 0, on = d0 >= 7.2, warn = d0 >= 6 && !on;
