@@ -413,7 +413,7 @@ const I18N = {
     'over.title': '你被插入了', 'over.by': '你被「{name}」從尾巴插入了', 'over.stats': '最長 {len} · 插入 {n} 條', 'over.menu': '主選單', 'over.again': '再來一局',
     'toast.ouroHint': '把頭繞進自己的尾巴就會發動', 'toast.enter': '進入「{name}」了！',
     'toast.enteredGuard': '被「{name}」進入了！快按縮緊或進入別人的尾巴把牠擠出去', 'toast.entered': '被「{name}」進入了！快進入別人的尾巴把牠擠出去',
-    'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.soap': '踩到肥皂，滑出去了！', 'toast.alarm': '⏰ 鬧鐘響了！全場加速 5 秒', 'toast.dark': '💡 停電了！', 'toast.caught': '被床底的蜘蛛抓住了！', 'over.spider': '你被床底的蜘蛛包成一顆球帶走了', 'toast.tissue': '黏到衛生紙了…變慢！',
+    'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.soap': '踩到肥皂，滑出去了！', 'toast.alarm': '⏰ 鬧鐘響了！全場加速 5 秒', 'toast.dark': '💡 停電了！', 'toast.caught': '被蜘蛛抓住了！', 'over.spider': '你被蜘蛛包成一顆球帶走了', 'toast.tissue': '黏到衛生紙了…變慢！',
     'toast.bubble': '鑽進保險套了！5 秒內不會被插入', 'toast.pop': '泡泡破了！', 'toast.bounceOther': '「{name}」有泡泡保護，彈開了', 'toast.bounceMe': '保險套把對方彈開了！',
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
     'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.pill': '威爾鋼', 'item.empty': '道具格（空）',
@@ -449,7 +449,7 @@ const I18N = {
     'over.title': 'You got plugged', 'over.by': '{name} plugged you from behind', 'over.stats': 'Longest {len} · Plugged {n}', 'over.menu': 'Main menu', 'over.again': 'Play again',
     'toast.ouroHint': 'Loop your head into your own tail to trigger it', 'toast.enter': 'You’re in {name}!',
     'toast.enteredGuard': '{name} got in you! Clench, or get into someone’s tail to push it out', 'toast.entered': '{name} got in you! Get into someone’s tail to push it out',
-    'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.soap': 'Slipped on the soap!', 'toast.alarm': '⏰ The alarm went off! Everyone speeds up for 5 s', 'toast.dark': '💡 Lights out!', 'toast.caught': 'The spider under the bed got you!', 'over.spider': 'The spider under the bed wrapped you up and carried you off', 'toast.tissue': 'Stuck to a tissue… slowed down!',
+    'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.soap': 'Slipped on the soap!', 'toast.alarm': '⏰ The alarm went off! Everyone speeds up for 5 s', 'toast.dark': '💡 Lights out!', 'toast.caught': 'A spider got you!', 'over.spider': 'A spider wrapped you up and carried you off', 'toast.tissue': 'Stuck to a tissue… slowed down!',
     'toast.bubble': 'Into the condom! Can’t be plugged for 5s', 'toast.pop': 'Popped!', 'toast.bounceOther': '{name} is wrapped up, bounced off', 'toast.bounceMe': 'Your condom bounced them off!',
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
     'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.pill': 'Blue Pill', 'item.empty': 'Item slot (empty)',
@@ -571,8 +571,9 @@ const MAPS = {
     obstacles: [
       { name: 'vanity', x0: -19, x1: 23, z0: -43, z1: -6.5 },   // sink cabinet on the top wall
       { name: 'tub',    x0: 27,  x1: 60, z0: -43, z1: 31 },     // bathtub platform on the right wall
-      { name: 'toilet', x0: -60, x1: -29, z0: 17.5, z1: 34 },   // toilet on the left wall
-      { name: 'dryer',  x0: 21.5, x1: 26.5, z0: 34.6, z1: 39.4 }, // hair dryer lying on the floor below the tub
+      { name: 'toilet', x0: -60, x1: -29, z0: 17.5, z1: 34,     // toilet on the left wall: tank + oval bowl
+        hb: [{ x0: -60, x1: -52, z0: 18.5, z1: 33 }, { cx: -45, cz: 25.5, r: 7.4 }, { cx: -36.5, cz: 25.5, r: 6.8 }] },
+      { name: 'dryer',  x0: 21.5, x1: 26.5, z0: 34.6, z1: 39.4, hb: [{ x0: 21.2, x1: 26.3, z0: 35.6, z1: 38.2 }] }, // hair dryer lying on the floor below the tub
     ],
     soap: true, // a bar of soap now and then skids around the floor, leaving a slippery trail
     dryer: { x: 21.2, z: 37, dx: -1, dz: 0, len: 36, w: 7 }, // nozzle position, wind direction, reach and width at the nozzle
@@ -587,24 +588,29 @@ const MAPS = {
   },
   // bedroom from Chiu's top-down picture (1 unit ≈ 10.9 px, room centre at px 725, 535)
   bedroom: {
-    name: '臥室', name_en: 'Bedroom', desc_en: 'Hide under the bed, but a spider lives down there. The alarm clock speeds everyone up every minute, and sometimes the lights go out.', desc: '可以鑽到床底下躲起來，但床底住著一隻蜘蛛。鬧鐘每分鐘響一次讓大家加速，偶爾還會停電。',
+    name: '臥室', name_en: 'Bedroom', desc_en: 'Hide under the bed or the desk, but two spiders live under each. The alarm clock rings now and then and speeds everyone up, and sometimes the lights go out.', desc: '可以鑽到床底下或書桌底下躲起來，但兩邊各住著兩隻蜘蛛。鬧鐘不定時響，讓大家一起加速，偶爾還會停電。',
     W: 120, H: 86, door: [13.3, 29.4],
     obstacles: [
       { name: 'bed',      x0: -60,  x1: -57.4, z0: -43,  z1: -5 }, // only the headboard is solid: snakes can crawl under the bed
       { name: 'stand',    x0: -60,  x1: -42.2, z0: -5,   z1: 11 },
-      { name: 'desk',     x0: 28.4, x1: 60,   z0: -43,   z1: 21.6 },
-      { name: 'chair',    x0: 19.5, x1: 28.4, z0: -13,   z1: 6.5 },
+      { name: 'desk',     x0: 28.4, x1: 60,   z0: -43,   z1: 21.6, // only the four legs are solid: snakes can crawl under the desk
+        hb: [[29.4, -42], [59, -42], [29.4, 20.6], [59, 20.6]].map(([x, z]) => ({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 })) },
+      { name: 'chair',    x0: 19.5, x1: 28.4, z0: -13,   z1: 6.5, hb: [{ cx: 24.1, cz: -3.2, r: 4.4 }] },
       { name: 'shelf',    x0: -60,  x1: 6.5,  z0: 35,    z1: 43 },
-      { name: 'backpack', x0: 8.7,  x1: 19.3, z0: -34.4, z1: -22.5 },
-      { name: 'door1',    x0: 18.2, x1: 24.2, z0: 30,    z1: 37.2 },
-      { name: 'door2',    x0: 23,   x1: 29.4, z0: 36.2,  z1: 43 },
+      { name: 'backpack', x0: 8.7,  x1: 19.3, z0: -34.4, z1: -22.5, hb: [{ cx: 14, cz: -30.2, r: 4.8 }, { cx: 14, cz: -26, r: 4 }] },
+      { name: 'door1',    x0: 18.2, x1: 24.2, z0: 30,    z1: 37.2, // the open door is a thin board: a chain of small circles along it
+        hb: Array.from({ length: 8 }, (_, i) => ({ cx: 18.6 + i / 7 * 10, cz: 30.4 + i / 7 * 11.6, r: 1.2 })) },
+      { name: 'door2',    x0: 23,   x1: 29.4, z0: 36.2,  z1: 43, hb: [] },
     ],
     mat: { x0: -31.7, x1: 12.8, z0: -0.2, z1: 25.4, h: 0.15 },   // rug
     // crumpled tissues lying around the desk chair: run over one and bits stick to you, slowing you down
     tissues: { cx: 24, cz: -3.2, rMin: 6.5, rMax: 10.5, n: 5 },
     bed: { x0: -60, x1: 4.6, z0: -43, z1: -5 },         // the bed itself (drawn), most of it open underneath
-    under: { x0: -57.4, x1: 4.6, z0: -43, z1: -5 },     // the dark space under the bed, where the spider lives
-    web: { x: -55, z: -39.5 },                          // the spider's web in the top-left corner
+    // the dark spaces under the bed and under the desk: two spiders live in each, with a web in the room's corner there
+    lairs: [
+      { under: { x0: -57.4, x1: 4.6, z0: -43, z1: -5 }, web: { x: -55, z: -39.5 }, corner: { x: -57.4, z: -43, sx: 1 } },
+      { under: { x0: 29.4, x1: 60, z0: -43, z1: 21.6 }, web: { x: 55, z: -39.5 }, corner: { x: 60, z: -43, sx: -1 } },
+    ],
     alarm: { x: -46.3, z: 4.8, every: 60, rush: 5 },    // the alarm clock on the nightstand rings every minute: everyone speeds up for 5 s
     dark: true,                                         // now and then the lights go out for 8 s
     // an opened condom lands near the nightstand (thrown from the bed); any snake can slip in and get a protective bubble
@@ -612,14 +618,16 @@ const MAPS = {
   },
 };
 // picnic: a big checked blanket on a lawn. The blanket is the play area; food and tableware on it are obstacles.
-{ const ob = (name, cx, cz, w, d) => ({ name, x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 });
+{ const ob = (name, cx, cz, w, d, hb) => ({ name, x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, hb });
   MAPS.picnic = {
     name: '野餐', name_en: 'Picnic', desc: '草地上的大野餐墊，最大的地圖。食物和餐具是障礙物，打翻的果汁會讓你變慢。', desc_en: 'A big picnic blanket on the lawn, the largest map. Food and tableware are in the way, and spilled juice slows you down.',
     W: 144, H: 104, door: [0, 0],
     obstacles: [
-      ob('basket', -52, -34, 24, 16), ob('melon', 44, -32, 14, 14), ob('plates', -8, -40, 14, 12), ob('bottle', 58, 8, 6, 22),
-      ob('cake', -50, 26, 16, 16), ob('bowl', 34, 38, 13, 13), ob('baguette', -6, 42, 26, 5),
-      ob('fork', 12, 24, 3, 18), ob('knife', 17, 24, 3, 18), ob('cup1', 24, -6, 6, 6), ob('cup2', -26, 6, 6, 6), ob('cup3', 4, -18, 6, 6),
+      ob('basket', -52, -34, 24, 16), ob('melon', 44, -32, 14, 14, [{ cx: 44, cz: -32, r: 5.7 }, { cx: 44, cz: -34, r: 5 }, { cx: 44, cz: -30, r: 5 }]),
+      ob('plates', -8, -40, 14, 12, [{ cx: -8, cz: -40, r: 6.1 }]), ob('bottle', 58, 8, 6, 22),
+      ob('cake', -50, 26, 16, 16, [{ cx: -50, cz: 26, r: 7.9 }]), ob('bowl', 34, 38, 13, 13, [{ cx: 34, cz: 38, r: 6.3 }]), ob('baguette', -6, 42, 26, 5),
+      ob('fork', 12, 24, 3, 18, [{ x0: 10.9, x1: 13.1, z0: 15.5, z1: 25 }, { x0: 11.4, x1: 12.6, z0: 25, z1: 33.5 }]), ob('knife', 17, 24, 3, 18, [{ x0: 15.8, x1: 18.2, z0: 15.5, z1: 33.5 }]),
+      ob('cup1', 24, -6, 6, 6, [{ cx: 24, cz: -6, r: 2.9 }]), ob('cup2', -26, 6, 6, 6, [{ cx: -26, cz: 6, r: 2.9 }]), ob('cup3', 4, -18, 6, 6, [{ cx: 4, cz: -18, r: 2.9 }]),
     ],
     spills: [[51, -9, 6, 4], [12, -12, 5, 3.5], [-35, 12, 5, 4]], // spilled juice: ellipses (centre x, z, radii) that slow you like spray puddles
     outdoor: true,
@@ -630,9 +638,11 @@ const MAPS = {
 const MAP_SCALE = 2, MAP_RAW = {};
 for (const id in MAPS) {
   const r = MAPS[id], k = MAP_SCALE, box = o => o && Object.assign({}, o, { x0: o.x0 * k, x1: o.x1 * k, z0: o.z0 * k, z1: o.z1 * k });
+  const shape = h => h.r ? { cx: h.cx * k, cz: h.cz * k, r: h.r * k } : { x0: h.x0 * k, x1: h.x1 * k, z0: h.z0 * k, z1: h.z1 * k };
+  const solid = o => Object.assign(box(o), { hit: (o.hb || [o]).map(shape) }); // hit = what snakes bump into (tight to the model)
   MAP_RAW[id] = r;
   MAPS[id] = Object.assign({}, r, {
-    W: r.W * k, H: r.H * k, door: r.door.map(v => v * k), obstacles: r.obstacles.map(box),
+    W: r.W * k, H: r.H * k, door: r.door.map(v => v * k), obstacles: r.obstacles.map(solid),
     mat: r.mat && Object.assign(box(r.mat), { h: r.mat.h * k }),
     shower: r.shower && Object.assign(box(r.shower), { cx: r.shower.cx * k, cz: r.shower.cz * k, rain: r.shower.rain * k }),
     wet: r.wet && r.wet.map(w => w.map(v => v * k)),
@@ -640,7 +650,7 @@ for (const id in MAPS) {
     condom: r.condom && { from: r.condom.from.map(v => v * k), spots: r.condom.spots.map(p => p.map(v => v * k)) },
     spills: r.spills && r.spills.map(w => w.map(v => v * k)),
     dryer: r.dryer && Object.assign({}, r.dryer, { x: r.dryer.x * k, z: r.dryer.z * k, len: r.dryer.len * k, w: r.dryer.w * k }),
-    bed: box(r.bed), under: box(r.under), web: r.web && { x: r.web.x * k, z: r.web.z * k },
+    bed: box(r.bed), lairs: r.lairs && r.lairs.map(L => ({ under: box(L.under), web: { x: L.web.x * k, z: L.web.z * k }, corner: { x: L.corner.x * k, z: L.corner.z * k, sx: L.corner.sx } })),
     alarm: r.alarm && Object.assign({}, r.alarm, { x: r.alarm.x * k, z: r.alarm.z * k }),
   });
 }
@@ -650,14 +660,18 @@ const onSpill = (x, z) => (MAP.spills || []).some(([cx, cz, rx, rz]) => ((x - cx
 const onWet = (x, z) => inShower(x, z) && (MAP.wet || []).some(([cx, cz, rx, rz]) => ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2 < 1);
 function mapFree(x, z, m) { // inside the floor and clear of every fixture by margin m
   if (Math.abs(x) > MAP.W / 2 - m || Math.abs(z) > MAP.H / 2 - m) return false;
-  for (const o of MAP.obstacles) if (x > o.x0 - m && x < o.x1 + m && z > o.z0 - m && z < o.z1 + m) return false;
+  for (const o of MAP.obstacles) for (const h of o.hit) {
+    if (h.r) { if ((x - h.cx) ** 2 + (z - h.cz) ** 2 < (h.r + m) ** 2) return false; }
+    else if (x > h.x0 - m && x < h.x1 + m && z > h.z0 - m && z < h.z1 + m) return false;
+  }
   return true;
 }
 function mapPush(p, rad) { // keep a circle (p.x, p.z, rad) on the floor and out of fixtures
   const hw = MAP.W / 2 - rad, hh = MAP.H / 2 - rad;
   p.x = Math.max(-hw, Math.min(hw, p.x)); p.z = Math.max(-hh, Math.min(hh, p.z));
   let hit = false;
-  for (const o of MAP.obstacles) {
+  for (const ob of MAP.obstacles) for (const o of ob.hit) {
+    if (o.r) { const dx = p.x - o.cx, dz = p.z - o.cz, d = Math.hypot(dx, dz), R = o.r + rad; if (d >= R) continue; hit = true; if (d > 1e-6) { p.x = o.cx + dx / d * R; p.z = o.cz + dz / d * R; } else p.x = o.cx + R; continue; }
     const cx = Math.max(o.x0, Math.min(o.x1, p.x)), cz = Math.max(o.z0, Math.min(o.z1, p.z));
     const dx = p.x - cx, dz = p.z - cz, d = Math.hypot(dx, dz);
     if (d >= rad) continue;
@@ -814,7 +828,7 @@ const Sim = {
   spawnPoint() {
     for (let k = 0; k < 30; k++) {
       const { x, z } = randomFree(6);
-      if (MAP.under && x > MAP.under.x0 - 6 && x < MAP.under.x1 + 6 && z < MAP.under.z1 + 6) continue; // not under the bed, next to the spider
+      if ((MAP.lairs || []).some(L => x > L.under.x0 - 6 && x < L.under.x1 + 6 && z > L.under.z0 - 6 && z < L.under.z1 + 6)) continue; // not under the bed / desk, next to the spiders
       if (this.snakes.every(s => !s.alive || Math.hypot(s.x - x, s.z - z) > 14)) return { x, z };
     }
     return randomFree(4);
@@ -1227,8 +1241,9 @@ const Sim = {
     if (this.noFood) return; // not in the tutorial
     const H = this.haz || (this.haz = {
       soap: null, soapCd: rnd(8, 16), trail: [], dryT: 0, alarmT: rnd(30, 60), rushT: 0, darkCd: rnd(25, 45), warnT: 0, darkT: 0,
-      spider: MAP.under ? { x: (MAP.under.x0 + MAP.under.x1) / 2, z: (MAP.under.z0 + MAP.under.z1) / 2, dir: 0, state: 'walk', t: 0, tx: 0, tz: 0, victim: null, ball: null, len0: 0 } : null,
-      webBalls: [],
+      // two spiders per lair (under the bed, under the desk), each lair with its own web of silk balls
+      spiders: (MAP.lairs || []).flatMap((L, li) => [0.3, 0.7].map(f => ({ lair: li, x: L.under.x0 + (L.under.x1 - L.under.x0) * f, z: (L.under.z0 + L.under.z1) / 2, dir: 0, state: 'walk', t: 0, tx: 0, tz: 0, victim: null, ball: null, len0: 0 }))),
+      webBalls: (MAP.lairs || []).map(() => []),
     });
     // 滑溜肥皂: a bar of soap skids around for a while; touching it or its foamy trail (8 s) makes a snake skid straight for 1.5 s
     if (MAP.soap) {
@@ -1275,13 +1290,13 @@ const Sim = {
       else if (H.warnT > 0) { if ((H.warnT -= dt) <= 0) { H.warnT = 0; H.darkT = 8; this.events.push({ type: 'dark' }); } }
       else if ((H.darkCd -= dt) <= 0) H.warnT = 1.2;
     }
-    // the spider under the bed: wanders there, reels in whoever it touches, wraps them into a ball and carries it to its web
-    const sp = H.spider, U = MAP.under;
-    if (sp) {
+    // the spiders under the bed and the desk: they wander there, reel in any snake whose body they touch, wrap it into a ball
+    // and carry it to their web
+    for (const sp of H.spiders) { const L = MAP.lairs[sp.lair], U = L.under;
       sp.t += dt;
       const walkTo = (x, z, v) => { const dx = x - sp.x, dz = z - sp.z, d = Math.hypot(dx, dz); if (d > 1e-3) { sp.dir = Math.atan2(dz, dx); const st = Math.min(d, v * dt); sp.x += dx / d * st; sp.z += dz / d * st; } return d; };
       if (sp.state === 'walk') {
-        if (!sp.tx || walkTo(sp.tx, sp.tz, 5) < 1.5 || sp.t > 6) { sp.t = 0; sp.tx = rnd(U.x0 + 6, U.x1 - 6); sp.tz = rnd(U.z0 + 6, U.z1 - 6); }
+        if (!sp.tx || walkTo(sp.tx, sp.tz, 5) < 1.5 || sp.t > 6) { sp.t = 0; sp.tx = rnd(U.x0 + 4, U.x1 - 4); sp.tz = rnd(U.z0 + 4, U.z1 - 4); }
         for (const s of alive) {
           if (!s.alive || s.webbed || s.invuln > 0 || s.bubbleT > 0 || s.ouroT > 0) continue;
           if (Math.hypot(s.x - sp.x, s.z - sp.z) > BL(s) + 6) continue;
@@ -1306,7 +1321,7 @@ const Sim = {
           }
         }
       } else if (sp.state === 'carry') {
-        if (walkTo(MAP.web.x + 3, MAP.web.z + 3, 10) < 1.5) { H.webBalls.push(sp.ball); if (H.webBalls.length > 6) H.webBalls.shift(); sp.ball = null; sp.state = 'rest'; sp.t = 0; }
+        if (walkTo(L.web.x + 3 * L.corner.sx, L.web.z + 3, 10) < 1.5) { const wb = H.webBalls[sp.lair]; wb.push(sp.ball); if (wb.length > 6) wb.shift(); sp.ball = null; sp.state = 'rest'; sp.t = 0; }
       } else if (sp.state === 'rest' && sp.t > 1.5) { sp.state = 'walk'; sp.t = 0; sp.tx = 0; }
     }
   },
@@ -1322,8 +1337,9 @@ const Sim = {
     if (H && H.darkT > 0) { // lights out: can't see a thing, so it just dashes about
       if (!(ai.pt > 0)) { ai.pt = rnd(0.4, 1.2); ai.pdir = s.dir + rnd(-1.6, 1.6); ai.pboost = Math.random() < 0.5; }
       ai.pt -= ai.t + 0.2; gx = s.x + Math.cos(ai.pdir) * 20; gz = s.z + Math.sin(ai.pdir) * 20; s.boost = ai.pboost;
-    } else if (H && H.spider && H.spider.state === 'walk' && Math.hypot(H.spider.x - s.x, H.spider.z - s.z) < 22 && Math.random() < 0.85) { // run from the bed spider
-      gx = s.x + (s.x - H.spider.x) * 2; gz = s.z + (s.z - H.spider.z) * 2; s.boost = true;
+    } else if (H && H.spiders && H.spiders.length) { // run from a nearby spider
+      let sp = null, best = 22; for (const q of H.spiders) { const d = Math.hypot(q.x - s.x, q.z - s.z); if (q.state === 'walk' && d < best) { best = d; sp = q; } }
+      if (sp && Math.random() < 0.85) { gx = s.x + (s.x - sp.x) * 2; gz = s.z + (s.z - sp.z) * 2; s.boost = true; }
     }
     if (gx === null) {
     // threat: enemy head close behind my tail -> run & boost
@@ -3044,7 +3060,8 @@ function makeHazards() {
     const sg = new THREE.PlaneGeometry(6, 0.3).rotateX(-Math.PI / 2);
     H.streaks = []; for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); m.userData = { u: Math.random(), v: Math.random() * 2 - 1, y: 1 + Math.random() * 3 }; hazRoot.add(m); H.streaks.push(m); }
   }
-  if (MAP.under) { // the spider: round, plum-coloured, big eyes, eight wiggly legs (local +x = forward)
+  if (MAP.lairs) { // the spiders: round, plum-coloured, big eyes, eight wiggly legs (local +x = forward)
+    const mkSpider = () => {
     const g = new THREE.Group(), plum = new THREE.MeshStandardMaterial({ color: '#5a4778', roughness: 0.55 });
     const body = new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 16), plum); body.scale.set(1.1, 0.95, 1); body.position.set(-0.6, 1.9, 0); body.castShadow = true; g.add(body);
     const head = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 14), plum); head.position.set(1.3, 1.6, 0); g.add(head);
@@ -3055,26 +3072,28 @@ function makeHazards() {
       const c = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), pink); c.scale.set(0.5, 0.7, 1); c.position.set(2.2, 1.45, s * 0.85); g.add(c);
     }
     const legM = new THREE.MeshStandardMaterial({ color: '#3e3057', roughness: 0.6 }), upG = new THREE.CylinderGeometry(0.22, 0.22, 2.4, 8).translate(0, 1.2, 0), loG = new THREE.CylinderGeometry(0.2, 0.12, 2.6, 8).translate(0, -1.3, 0);
-    H.legs = [];
+    const legs = [];
     for (let i = 0; i < 8; i++) {
       const side = i < 4 ? 1 : -1, k = i % 4, piv = new THREE.Group(); piv.position.set(-0.2 + (1.5 - k) * 0.55, 1.7, side * 0.9); g.add(piv);
       const up = new THREE.Mesh(upG, legM); up.rotation.x = side * 1.0; piv.add(up);
       const knee = new THREE.Group(); knee.position.set(0, 2.4 * Math.cos(1.0), side * 2.4 * Math.sin(1.0)); piv.add(knee);
       knee.add(new THREE.Mesh(loG, legM)); knee.rotation.x = side * 0.15;
-      piv.rotation.y = (1.5 - k) * 0.38 * side; H.legs.push({ piv, base: piv.rotation.y, ph: k * 1.6 + (side > 0 ? 0 : 0.8) });
+      piv.rotation.y = (1.5 - k) * 0.38 * side; legs.push({ piv, base: piv.rotation.y, ph: k * 1.6 + (side > 0 ? 0 : 0.8) });
     }
-    hazRoot.add(g); H.spider = g;
+    hazRoot.add(g); return { g, legs };
+    };
     const silk = hazTex(128, 64, (c, w, h) => { c.fillStyle = '#f7f5f0'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(150,150,160,.55)'; c.lineWidth = 2; for (let i = -8; i < 16; i++) { c.beginPath(); c.moveTo(i * 10, 0); c.lineTo(i * 10 + 40, h); c.stroke(); c.beginPath(); c.moveTo(i * 10 + 40, 0); c.lineTo(i * 10, h); c.stroke(); } });
     H.ballGeo = new THREE.SphereGeometry(1, 20, 14);
     const mkBall = () => { const m = new THREE.Mesh(H.ballGeo, new THREE.MeshStandardMaterial({ map: silk, roughness: 0.8 })); m.castShadow = true; m.visible = false; hazRoot.add(m); return m; };
-    H.carry = mkBall(); H.webBalls = []; for (let i = 0; i < 6; i++) H.webBalls.push(mkBall());
-    H.thread = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#ffffff' })); H.thread.visible = false; H.thread.frustumCulled = false; hazRoot.add(H.thread);
-    // the web: spokes and sagging threads, lying in the top-left corner
+    const mkThread = () => { const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#ffffff' })); l.visible = false; l.frustumCulled = false; hazRoot.add(l); return l; };
+    H.spiders = MAP.lairs.flatMap(() => [0, 1]).map(() => Object.assign(mkSpider(), { carry: mkBall(), thread: mkThread() }));
+    H.webBalls = MAP.lairs.map(() => Array.from({ length: 6 }, mkBall));
+    // the webs: spokes and sagging threads, lying in each lair's corner (mirrored for the right-hand corner)
     const pts = [], R = 14, A = i => i / 9 * Math.PI / 2;
     for (let i = 0; i < 10; i++) pts.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(Math.cos(A(i)) * R, 0, Math.sin(A(i)) * R));
     for (let r = 2.5; r < R; r += 2.2) for (let i = 0; i < 9; i++) { const a0 = A(i), a1 = A(i + 1), am = (a0 + a1) / 2, mid = new THREE.Vector3(Math.cos(am) * r * 0.9, 0, Math.sin(am) * r * 0.9); pts.push(new THREE.Vector3(Math.cos(a0) * r, 0, Math.sin(a0) * r), mid, mid.clone(), new THREE.Vector3(Math.cos(a1) * r, 0, Math.sin(a1) * r)); }
-    const web = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85 }));
-    web.position.set(MAP.under.x0, 0.1, MAP.under.z0); hazRoot.add(web);
+    const webGeo = new THREE.BufferGeometry().setFromPoints(pts), webMat = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85 });
+    for (const L of MAP.lairs) { const web = new THREE.LineSegments(webGeo, webMat); web.position.set(L.corner.x, 0.1, L.corner.z); web.scale.x = L.corner.sx; hazRoot.add(web); }
   }
 }
 function updateHazards(dt, t) {
@@ -3104,19 +3123,22 @@ function updateHazards(dt, t) {
       m.position.set(D.x + D.dx * u - D.dz * v, d.y, D.z + D.dz * u + D.dx * v); m.rotation.y = -Math.atan2(D.dz, D.dx);
       m.material.opacity = on ? 0.55 * Math.sin(Math.PI * d.u) : 0; }
   }
-  if (H.spider && S && S.spider) {
-    const sp = S.spider, g = H.spider, moving = sp.state === 'walk' || sp.state === 'carry';
-    g.position.set(sp.x, Math.abs(Math.sin(t * 9)) * (moving ? 0.25 : 0.05), sp.z); g.rotation.y = -sp.dir;
-    for (const l of H.legs) l.piv.rotation.y = l.base + (moving ? Math.sin(t * 12 + l.ph) * 0.3 : Math.sin(t * 3 + l.ph) * 0.05);
-    const b = sp.ball; H.carry.visible = !!b;
-    if (b) { const r = b.size; H.carry.scale.setScalar(r); H.carry.material.color.set('#ffffff').lerp(new THREE.Color(b.color), 0.25);
-      if (sp.state === 'reel') H.carry.position.set(sp.x + Math.cos(sp.dir) * (2.6 + r * 0.6), r, sp.z + Math.sin(sp.dir) * (2.6 + r * 0.6));
-      else H.carry.position.set(sp.x - Math.cos(sp.dir) * 0.6, 3.6 + r * 0.85, sp.z - Math.sin(sp.dir) * 0.6); }
-    const v = sp.victim; H.thread.visible = !!(v && sp.state === 'reel');
-    if (H.thread.visible) { const P = H.thread.geometry.attributes.position; P.setXYZ(0, sp.x + Math.cos(sp.dir) * 2.2, 1.6, sp.z + Math.sin(sp.dir) * 2.2); P.setXYZ(1, v.x, v.r, v.z); P.needsUpdate = true; }
-    for (let i = 0; i < H.webBalls.length; i++) { const m = H.webBalls[i], wb = S.webBalls[i]; m.visible = !!wb; if (!wb) continue;
-      const a = 0.2 + i * 0.24, rr = 5 + (i % 3) * 3; m.scale.setScalar(wb.size * 0.9); m.material.color.set('#ffffff').lerp(new THREE.Color(wb.color), 0.25);
-      m.position.set(MAP.under.x0 + Math.cos(a) * rr, wb.size * 0.9, MAP.under.z0 + Math.sin(a) * rr); }
+  if (H.spiders && S && S.spiders) {
+    S.spiders.forEach((sp, si) => { const V = H.spiders[si]; if (!V) return;
+      const g = V.g, moving = sp.state === 'walk' || sp.state === 'carry';
+      g.position.set(sp.x, Math.abs(Math.sin(t * 9 + si)) * (moving ? 0.25 : 0.05), sp.z); g.rotation.y = -sp.dir;
+      for (const l of V.legs) l.piv.rotation.y = l.base + (moving ? Math.sin(t * 12 + l.ph + si) * 0.3 : Math.sin(t * 3 + l.ph) * 0.05);
+      const b = sp.ball; V.carry.visible = !!b;
+      if (b) { const r = b.size; V.carry.scale.setScalar(r); V.carry.material.color.set('#ffffff').lerp(new THREE.Color(b.color), 0.25);
+        if (sp.state === 'reel') V.carry.position.set(sp.x + Math.cos(sp.dir) * (2.6 + r * 0.6), r, sp.z + Math.sin(sp.dir) * (2.6 + r * 0.6));
+        else V.carry.position.set(sp.x - Math.cos(sp.dir) * 0.6, 3.6 + r * 0.85, sp.z - Math.sin(sp.dir) * 0.6); }
+      const v = sp.victim; V.thread.visible = !!(v && sp.state === 'reel');
+      if (V.thread.visible) { const P = V.thread.geometry.attributes.position; P.setXYZ(0, sp.x + Math.cos(sp.dir) * 2.2, 1.6, sp.z + Math.sin(sp.dir) * 2.2); P.setXYZ(1, v.x, v.r, v.z); P.needsUpdate = true; }
+    });
+    MAP.lairs.forEach((L, li) => { const balls = H.webBalls[li], got = S.webBalls[li] || [];
+      for (let i = 0; i < balls.length; i++) { const m = balls[i], wb = got[i]; m.visible = !!wb; if (!wb) continue;
+        const a = 0.2 + i * 0.24, rr = 5 + (i % 3) * 3; m.scale.setScalar(wb.size * 0.9); m.material.color.set('#ffffff').lerp(new THREE.Color(wb.color), 0.25);
+        m.position.set(L.corner.x + Math.cos(a) * rr * L.corner.sx, wb.size * 0.9, L.corner.z + Math.sin(a) * rr); } });
   }
 }
 const darkOv = document.getElementById('darkOv'), _dk = new THREE.Vector3(); let darkA = 0;
