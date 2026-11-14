@@ -39,6 +39,7 @@ body {
   font-size: 13px; font-variant-numeric: tabular-nums; box-shadow: 0 2px 10px rgba(0,0,0,.12);
 }
 #arrows { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+#darkOv { position: fixed; inset: 0; pointer-events: none; z-index: 4; opacity: 0; }
 #arrows .arw { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; will-change: transform; }
 #arrows .arw svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
 #board .title { font-size: 11px; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 4px; }
@@ -250,6 +251,7 @@ body:not(:has(#startOv:not([hidden]))) #titleOv.docked { opacity: 0; }
 </div>
 <div class="hud" id="board"><div class="title"><span data-i18n="hud.board">排行</span><span id="aliveN"></span></div><div id="boardRows"></div></div>
 <div id="arrows" aria-hidden="true"></div>
+<div id="darkOv" aria-hidden="true"></div>
 <div class="hud" id="toast"></div>
 <div id="joy" hidden><div class="knob" id="knob"></div></div>
 <button class="btn" id="itemBtn" aria-label="item" disabled><img id="itemImg" alt="" hidden></button>
@@ -401,7 +403,7 @@ const I18N = {
     'over.title': '你被插入了', 'over.by': '你被「{name}」從尾巴插入了', 'over.stats': '最長 {len} · 插入 {n} 條', 'over.menu': '主選單', 'over.again': '再來一局',
     'toast.ouroHint': '把頭繞進自己的尾巴就會發動', 'toast.enter': '進入「{name}」了！',
     'toast.enteredGuard': '被「{name}」進入了！快按縮緊或進入別人的尾巴把牠擠出去', 'toast.entered': '被「{name}」進入了！快進入別人的尾巴把牠擠出去',
-    'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.tissue': '黏到衛生紙了…變慢！',
+    'toast.ejected': '被「{name}」擠出來了！', 'toast.eject': '把「{name}」擠出去了！', 'toast.soap': '踩到肥皂，滑出去了！', 'toast.alarm': '⏰ 鬧鐘響了！全場加速 5 秒', 'toast.dark': '💡 停電了！', 'toast.caught': '被床底的蜘蛛抓住了！', 'over.spider': '你被床底的蜘蛛包成一顆球帶走了', 'toast.tissue': '黏到衛生紙了…變慢！',
     'toast.bubble': '鑽進保險套了！5 秒內不會被插入', 'toast.pop': '泡泡破了！', 'toast.bounceOther': '「{name}」有泡泡保護，彈開了', 'toast.bounceMe': '保險套把對方彈開了！',
     'toast.swap': '頭尾交換！', 'toast.guard': '縮緊！3 秒內不會被插入', 'toast.ouro': '銜尾蛇！進入自己 5 秒', 'toast.plugged': '插入了「{name}」！',
     'item.condom': '保險套', 'item.tissue': '衛生紙', 'item.lube': '潤滑油', 'item.pill': '威爾鋼', 'item.empty': '道具格（空）',
@@ -437,7 +439,7 @@ const I18N = {
     'over.title': 'You got plugged', 'over.by': '{name} plugged you from behind', 'over.stats': 'Longest {len} · Plugged {n}', 'over.menu': 'Main menu', 'over.again': 'Play again',
     'toast.ouroHint': 'Loop your head into your own tail to trigger it', 'toast.enter': 'You’re in {name}!',
     'toast.enteredGuard': '{name} got in you! Clench, or get into someone’s tail to push it out', 'toast.entered': '{name} got in you! Get into someone’s tail to push it out',
-    'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.tissue': 'Stuck to a tissue… slowed down!',
+    'toast.ejected': '{name} pushed you out!', 'toast.eject': 'You pushed {name} out!', 'toast.soap': 'Slipped on the soap!', 'toast.alarm': '⏰ The alarm went off! Everyone speeds up for 5 s', 'toast.dark': '💡 Lights out!', 'toast.caught': 'The spider under the bed got you!', 'over.spider': 'The spider under the bed wrapped you up and carried you off', 'toast.tissue': 'Stuck to a tissue… slowed down!',
     'toast.bubble': 'Into the condom! Can’t be plugged for 5s', 'toast.pop': 'Popped!', 'toast.bounceOther': '{name} is wrapped up, bounced off', 'toast.bounceMe': 'Your condom bounced them off!',
     'toast.swap': 'Head–tail swap!', 'toast.guard': 'Clenched! Can’t be plugged for 3s', 'toast.ouro': 'Ouroboros! Inside yourself for 5s', 'toast.plugged': 'You plugged {name}!',
     'item.condom': 'Condom', 'item.tissue': 'Tissue', 'item.lube': 'Lube', 'item.pill': 'Blue Pill', 'item.empty': 'Item slot (empty)',
@@ -554,13 +556,16 @@ const COS_CONE = Math.cos(CFG.CONE);
 // Fixtures are solid boxes nobody can pass through. Pushed against a wall where they touch one, so no thin traps.
 const MAPS = {
   bathroom: {
-    name: '浴室', name_en: 'Bathroom', desc_en: 'The wet floor in the shower speeds you up, and spray puddles don’t work there.', desc: '淋浴區的濕地可以加速，噴射的水灘在那裡沒有效果。',
+    name: '浴室', name_en: 'Bathroom', desc_en: 'The wet shower floor speeds you up. A bar of soap skids around now and then and sends you sliding, and the hair dryer blows you aside.', desc: '淋浴區的濕地可以加速。地上偶爾有肥皂亂滑，踩到會直直滑出去；吹風機會定時吹風把你推開。',
     W: 120, H: 86, door: [-12, 8],
     obstacles: [
       { name: 'vanity', x0: -19, x1: 23, z0: -43, z1: -6.5 },   // sink cabinet on the top wall
       { name: 'tub',    x0: 27,  x1: 60, z0: -43, z1: 31 },     // bathtub platform on the right wall
       { name: 'toilet', x0: -60, x1: -29, z0: 17.5, z1: 34 },   // toilet on the left wall
+      { name: 'dryer',  x0: 21.5, x1: 26.5, z0: 34.6, z1: 39.4 }, // hair dryer lying on the floor below the tub
     ],
+    soap: true, // a bar of soap now and then skids around the floor, leaving a slippery trail
+    dryer: { x: 21.2, z: 37, dx: -1, dz: 0, len: 36, w: 7 }, // nozzle position, wind direction, reach and width at the nozzle
     mat: { x0: -14, x1: 17, z0: 1.8, z1: 22.8, h: 0.25 },        // raised bath mat
     // shower corner (open floor): water falls around the drain and leaves clear wet patches.
     // Standing in a wet patch makes you faster; spray puddles don't work (or stay) in here.
@@ -572,10 +577,10 @@ const MAPS = {
   },
   // bedroom from Chiu's top-down picture (1 unit ≈ 10.9 px, room centre at px 725, 535)
   bedroom: {
-    name: '臥室', name_en: 'Bedroom', desc_en: 'Bed, desk, bookshelf and rug. A big open middle with lots of corners around the edges.', desc: '床、書桌、書櫃和地毯，中間空地大，四周角落多。',
+    name: '臥室', name_en: 'Bedroom', desc_en: 'Hide under the bed, but a spider lives down there. The alarm clock speeds everyone up every minute, and sometimes the lights go out.', desc: '可以鑽到床底下躲起來，但床底住著一隻蜘蛛。鬧鐘每分鐘響一次讓大家加速，偶爾還會停電。',
     W: 120, H: 86, door: [13.3, 29.4],
     obstacles: [
-      { name: 'bed',      x0: -60,  x1: 4.6,  z0: -43,   z1: -5 },
+      { name: 'bed',      x0: -60,  x1: -57.4, z0: -43,  z1: -5 }, // only the headboard is solid: snakes can crawl under the bed
       { name: 'stand',    x0: -60,  x1: -42.2, z0: -5,   z1: 11 },
       { name: 'desk',     x0: 28.4, x1: 60,   z0: -43,   z1: 21.6 },
       { name: 'chair',    x0: 19.5, x1: 28.4, z0: -13,   z1: 6.5 },
@@ -587,6 +592,11 @@ const MAPS = {
     mat: { x0: -31.7, x1: 12.8, z0: -0.2, z1: 25.4, h: 0.15 },   // rug
     // crumpled tissues lying around the desk chair: run over one and bits stick to you, slowing you down
     tissues: { cx: 24, cz: -3.2, rMin: 6.5, rMax: 10.5, n: 5 },
+    bed: { x0: -60, x1: 4.6, z0: -43, z1: -5 },         // the bed itself (drawn), most of it open underneath
+    under: { x0: -57.4, x1: 4.6, z0: -43, z1: -5 },     // the dark space under the bed, where the spider lives
+    web: { x: -55, z: -39.5 },                          // the spider's web in the top-left corner
+    alarm: { x: -46.3, z: 4.8, every: 60, rush: 5 },    // the alarm clock on the nightstand rings every minute: everyone speeds up for 5 s
+    dark: true,                                         // now and then the lights go out for 8 s
     // an opened condom lands near the nightstand (thrown from the bed); any snake can slip in and get a protective bubble
     condom: { from: [-30, -20], spots: [[-38, 3], [-37, 14], [-45, 15.5], [-53, 15.5], [-39, -1.5], [-48, 19]] },
   },
@@ -619,6 +629,9 @@ for (const id in MAPS) {
     tissues: r.tissues && Object.assign({}, r.tissues, { cx: r.tissues.cx * k, cz: r.tissues.cz * k, rMin: r.tissues.rMin * k, rMax: r.tissues.rMax * k }),
     condom: r.condom && { from: r.condom.from.map(v => v * k), spots: r.condom.spots.map(p => p.map(v => v * k)) },
     spills: r.spills && r.spills.map(w => w.map(v => v * k)),
+    dryer: r.dryer && Object.assign({}, r.dryer, { x: r.dryer.x * k, z: r.dryer.z * k, len: r.dryer.len * k, w: r.dryer.w * k }),
+    bed: box(r.bed), under: box(r.under), web: r.web && { x: r.web.x * k, z: r.web.z * k },
+    alarm: r.alarm && Object.assign({}, r.alarm, { x: r.alarm.x * k, z: r.alarm.z * k }),
   });
 }
 let MAP = MAPS.bathroom, MAP_ID = 'bathroom';
@@ -692,7 +705,7 @@ const Sim = {
 
   reset() {
     this.snakes = []; this.food = []; this.events = []; this.merges = []; this.puddles = []; this.puddleSeq = 0; this.time = 0; this.noFood = false; this.aggrBonus = 0;
-    this.tissues = []; this.tissueSeq = 0;
+    this.tissues = []; this.tissueSeq = 0; this.haz = null;
     if (MAP.tissues) for (let i = 0; i < MAP.tissues.n; i++) this.spawnTissue();
     this.condom = MAP.condom ? { phase: 'wait', t: rnd(4, 15), seq: 0 } : null;
     for (let i = 0; i < CFG.FOOD; i++) this.food.push(this.makeFood());
@@ -791,6 +804,7 @@ const Sim = {
   spawnPoint() {
     for (let k = 0; k < 30; k++) {
       const { x, z } = randomFree(6);
+      if (MAP.under && x > MAP.under.x0 - 6 && x < MAP.under.x1 + 6 && z < MAP.under.z1 + 6) continue; // not under the bed, next to the spider
       if (this.snakes.every(s => !s.alive || Math.hypot(s.x - x, s.z - z) > 14)) return { x, z };
     }
     return randomFree(4);
@@ -814,7 +828,7 @@ const Sim = {
     this.snakes.push(s);
     return s;
   },
-  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1) * (s.wrapT > 0 ? 0 : 1) * (s.bumpT > 0 ? 0.55 : 1); },
+  speedOf(s) { return (s.boost ? CFG.BOOST : CFG.SPEED) /* same speed at every size, like slither.io; size only slows turning */ * (s.merge ? 0.7 : 1) * (s.spitT > 0 ? 0.15 : 1) * (s.swapT > 0 ? 0.3 : 1) * (s.slowed ? slowK(s, CFG.PUDDLE_SLOW) : 1) * (s.wet ? CFG.SHOWER_FAST : 1) * (s.tissueT > 0 ? slowK(s, CFG.TISSUE_SLOW) : 1) * (s.lubeT > 0 ? CFG.LUBE_FAST : 1) * (s.speedK || 1) * (mod(s, 'sprinter') ? 1.15 : 1) * (s.whipT > 0 ? 0.35 : 1) * (s.wrapT > 0 ? 0 : 1) * (s.bumpT > 0 ? 0.55 : 1) * (s.slideT > 0 ? 1.3 : 1) * (this.haz && this.haz.rushT > 0 ? 1.5 : 1); },
 
   // ---- skills ----
   // turn the heading so it no longer points into the surface with normal (nx, nz)
@@ -1014,7 +1028,7 @@ const Sim = {
       if (m) s.boost = false;
       if (s.ejectT > 0) s.ejectT = Math.max(0, s.ejectT - dt);
       if (s.invuln > 0) s.invuln -= dt;
-      if (s.foreCd > 0) s.foreCd -= dt; if (s.bumpT > 0) s.bumpT -= dt; if (s.wrapT > 0) s.wrapT = Math.max(0, s.wrapT - dt); // Turtleneck: foreskin rolling back over the head
+      if (s.slideT > 0) s.slideT -= dt; if (s.slideImm > 0) s.slideImm -= dt; if (s.foreCd > 0) s.foreCd -= dt; if (s.bumpT > 0) s.bumpT -= dt; if (s.wrapT > 0) s.wrapT = Math.max(0, s.wrapT - dt); // Turtleneck: foreskin rolling back over the head
       if (s.special === 'grower') { if (s.growT > 0) s.growT = Math.max(0, s.growT - dt); s.growK = (s.growK || 0) + (((s.boost || s.growT > 0) ? 1 : 0) - (s.growK || 0)) * Math.min(1, dt * 3); }
       if (s.cd > 0) s.cd = Math.max(0, s.cd - dt / (1 - 0.1 * mod(s, 'quickCd')));
       if (s.guardT > 0) s.guardT = Math.max(0, s.guardT - dt);
@@ -1025,9 +1039,10 @@ const Sim = {
       s.slowed = this.inPuddle(s) || onSpill(s.x, s.z); s.wet = onWet(s.x, s.z);
       if (m && m.a === s) continue; // biter's head is locked inside the front snake's tail (see stepMerge)
       if (s.still && !m) continue; // tutorial dummy: doesn't move until it gets absorbed
+      if (s.webbed) continue; // caught by the bed spider: being reeled in (stepHazards moves it)
       if (s.ouroT > 0) { this.stepOuro(s, dt); continue; } // biting its own tail: holds still
       s.pulse = Math.max(0, s.pulse - dt * 1.6);
-      const diff = wrapA(s.target - s.dir);
+      const diff = s.slideT > 0 ? 0 : wrapA(s.target - s.dir); // on soap: skids straight ahead, can't turn
       const turn = (s.special === 'chode' ? CFG.TURN : CFG.TURN / (1 + (s.r - CFG.START_R) * 0.35)) * (1 + 0.1 * mod(s, 'agile')) * (mod(s, 'tightHole') ? 0.8 : 1) * (mod(s, 'sprinter') ? 0.75 : 1)
         * (s.special === 'banana' ? (diff > 0 ? 1.4 : 0.7) : 1); // Banana: right turns fast, left turns slow
       s.dir = wrapA(s.dir + Math.max(-turn * dt, Math.min(turn * dt, diff)));
@@ -1059,14 +1074,15 @@ const Sim = {
     this.eat(alive);
     this.stepTraps(dt, alive);
     this.stepItems(dt, alive);
+    this.stepHazards(dt, alive);
   },
 
   collide(alive) {
     for (const A of alive) {
-      if (!A.alive || (A.merge && A.merge.b !== A)) continue; // a biter mid-merge is locked; the bitten front snake can still act
+      if (!A.alive || A.webbed || (A.merge && A.merge.b !== A)) continue; // a biter mid-merge is locked; the bitten front snake can still act
       const fx = Math.cos(A.dir), fz = Math.sin(A.dir);
       for (const B of alive) {
-        if (B === A || !B.alive) continue;
+        if (B === A || !B.alive || B.webbed) continue;
         if (A.merge && A.merge.a === B) continue; // never collide with whoever is biting me
         if (Math.hypot(A.x - B.x, A.z - B.z) > BL(B) + A.r * headK(A) + B.r + 2) continue;
         // 1) tail absorb check: head touches tail cap AND comes from within the 45° cone behind it
@@ -1196,6 +1212,94 @@ const Sim = {
     }
   },
 
+  // ---- field effects: soap + hair dryer (bathroom), alarm clock, lights out, and the spider under the bed (bedroom) ----
+  stepHazards(dt, alive) {
+    if (this.noFood) return; // not in the tutorial
+    const H = this.haz || (this.haz = {
+      soap: null, soapCd: rnd(8, 16), trail: [], dryT: 0, alarmT: MAP.alarm ? 15 : 0, rushT: 0, darkCd: rnd(25, 45), warnT: 0, darkT: 0,
+      spider: MAP.under ? { x: (MAP.under.x0 + MAP.under.x1) / 2, z: (MAP.under.z0 + MAP.under.z1) / 2, dir: 0, state: 'walk', t: 0, tx: 0, tz: 0, victim: null, ball: null, len0: 0 } : null,
+      webBalls: [],
+    });
+    // 滑溜肥皂: a bar of soap skids around for a while; touching it or its foamy trail (8 s) makes a snake skid straight for 1.5 s
+    if (MAP.soap) {
+      if (!H.soap) { if ((H.soapCd -= dt) <= 0) { const p = randomFree(12), a = rnd(0, 6.283); H.soap = { x: p.x, z: p.z, a, t: 0, life: rnd(8, 11), drop: 0 }; } }
+      else {
+        const s = H.soap; s.t += dt; s.a += Math.sin(s.t * 1.7) * 0.9 * dt;
+        let nx = s.x + Math.cos(s.a) * 9 * dt, nz = s.z + Math.sin(s.a) * 9 * dt;
+        if (!mapFree(nx, nz, 2.5)) { // bounce off walls and fixtures
+          if (mapFree(s.x - Math.cos(s.a) * 9 * dt * 2, nz, 2.5)) s.a = Math.PI - s.a; else if (mapFree(nx, s.z - Math.sin(s.a) * 9 * dt * 2, 2.5)) s.a = -s.a; else s.a += Math.PI;
+          nx = s.x; nz = s.z;
+        }
+        s.x = nx; s.z = nz;
+        if ((s.drop -= dt) <= 0) { s.drop = 0.2; H.trail.push({ x: s.x, z: s.z, a: s.a, t: 0 }); }
+        if (s.t > s.life) { H.soap = null; H.soapCd = rnd(14, 26); }
+      }
+      for (const p of H.trail) p.t += dt;
+      while (H.trail.length && H.trail[0].t > 8) H.trail.shift();
+      for (const s of alive) {
+        if (!s.alive || s.slideImm > 0 || s.webbed || (s.merge && s.merge.a === s)) continue;
+        let hit = H.soap && Math.hypot(H.soap.x - s.x, H.soap.z - s.z) < 3 + s.r;
+        if (!hit) for (const p of H.trail) if (Math.abs(p.x - s.x) < 2.4 + s.r && Math.abs(p.z - s.z) < 2.4 + s.r && Math.hypot(p.x - s.x, p.z - s.z) < 2.2 + s.r) { hit = true; break; }
+        if (hit) { s.slideT = 1.5; s.slideImm = 2.1; this.events.push({ type: 'slide', a: s.id }); }
+      }
+    }
+    // 吹風機: off 6 s, warms up 1.2 s, then blows 4 s, pushing anyone in the wind along it
+    const D = MAP.dryer;
+    if (D) {
+      H.dryT = (H.dryT + dt) % 11.2;
+      if (H.dryT >= 7.2) for (const s of alive) {
+        if (!s.alive || s.webbed || (s.merge && s.merge.a === s)) continue;
+        const rx = s.x - D.x, rz = s.z - D.z, u = rx * D.dx + rz * D.dz, v = Math.abs(-rx * D.dz + rz * D.dx);
+        if (u > 0 && u < D.len && v < D.w / 2 + u * 0.18 + s.r) { const f = 9 * (1 - 0.5 * u / D.len); s.x += D.dx * f * dt; s.z += D.dz * f * dt; }
+      }
+    }
+    // 鬧鐘: rings every minute, and every snake rushes for 5 s
+    if (MAP.alarm) {
+      if (H.rushT > 0) H.rushT -= dt;
+      if ((H.alarmT += dt) >= MAP.alarm.every) { H.alarmT = 0; H.rushT = MAP.alarm.rush; this.events.push({ type: 'alarm' }); }
+    }
+    // 關燈: a 1.2 s flicker, then 8 s of darkness
+    if (MAP.dark) {
+      if (H.darkT > 0) { if ((H.darkT -= dt) <= 0) { H.darkT = 0; H.darkCd = rnd(35, 60); this.events.push({ type: 'lightsOn' }); } }
+      else if (H.warnT > 0) { if ((H.warnT -= dt) <= 0) { H.warnT = 0; H.darkT = 8; this.events.push({ type: 'dark' }); } }
+      else if ((H.darkCd -= dt) <= 0) H.warnT = 1.2;
+    }
+    // the spider under the bed: wanders there, reels in whoever it touches, wraps them into a ball and carries it to its web
+    const sp = H.spider, U = MAP.under;
+    if (sp) {
+      sp.t += dt;
+      const walkTo = (x, z, v) => { const dx = x - sp.x, dz = z - sp.z, d = Math.hypot(dx, dz); if (d > 1e-3) { sp.dir = Math.atan2(dz, dx); const st = Math.min(d, v * dt); sp.x += dx / d * st; sp.z += dz / d * st; } return d; };
+      if (sp.state === 'walk') {
+        if (!sp.tx || walkTo(sp.tx, sp.tz, 5) < 1.5 || sp.t > 6) { sp.t = 0; sp.tx = rnd(U.x0 + 6, U.x1 - 6); sp.tz = rnd(U.z0 + 6, U.z1 - 6); }
+        for (const s of alive) {
+          if (!s.alive || s.webbed || s.invuln > 0 || s.bubbleT > 0 || s.ouroT > 0) continue;
+          if (Math.hypot(s.x - sp.x, s.z - sp.z) > BL(s) + 6) continue;
+          if (s.body.some(p => Math.hypot(p.x - sp.x, p.z - sp.z) < 3.2 + s.r)) {
+            if (s.merge) { const o = s.merge.a === s ? s.merge.b : s.merge.a; o.merge = null; this.merges = this.merges.filter(x => x !== s.merge); s.merge = null; }
+            s.webbed = true; s.boost = false; s.slideT = 0; sp.state = 'reel'; sp.victim = s; sp.len0 = s.len; sp.t = 0;
+            this.events.push({ type: 'caught', a: s.id }); break;
+          }
+        }
+      } else if (sp.state === 'reel') {
+        const s = sp.victim;
+        if (!s || !s.alive) { sp.state = 'walk'; sp.victim = null; }
+        else { // drag the head in, and the body winds up into a silk ball
+          const dx = sp.x - s.x, dz = sp.z - s.z, d = Math.hypot(dx, dz);
+          if (d > 1) { const st = Math.min(d - 1, 26 * dt); s.x += dx / d * st; s.z += dz / d * st; s.dir = Math.atan2(dz, dx); }
+          s.len = s.lenTarget = Math.max(0.5, s.len - Math.max(8, sp.len0 / 1.3) * dt);
+          sp.ball = { color: s.color, size: Math.min(5, 1.6 + sp.len0 * 0.05) * Math.min(1, 0.3 + sp.t / 1.3) };
+          if (s.len <= 0.5 && d < 3) {
+            s.webbed = false; sp.victim = null; sp.state = 'carry'; sp.t = 0; sp.ball.size = Math.min(5, 1.6 + sp.len0 * 0.05);
+            if (s.mods && s.mods.lives > 0) { s.mods.lives--; this.revive(s); this.events.push({ type: 'spiderRevive', a: s.id }); }
+            else { s.alive = false; s.killedBy = -1; this.events.push({ type: 'merged', spider: true, a: -1, b: s.id, x: s.x, z: s.z, dir: s.dir, r: s.r, ar: s.r, len: sp.len0, color: s.color }); }
+          }
+        }
+      } else if (sp.state === 'carry') {
+        if (walkTo(MAP.web.x + 3, MAP.web.z + 3, 10) < 1.5) { H.webBalls.push(sp.ball); if (H.webBalls.length > 6) H.webBalls.shift(); sp.ball = null; sp.state = 'rest'; sp.t = 0; }
+      } else if (sp.state === 'rest' && sp.t > 1.5) { sp.state = 'walk'; sp.t = 0; sp.tx = 0; }
+    }
+  },
+
   // ---- simple AI: hunt tails from behind, guard own tail, else graze ----
   think(s, dt) {
     const ai = s.ai; ai.t -= dt;
@@ -1203,6 +1307,14 @@ const Sim = {
     ai.t = rnd(0.12, 0.25);
     s.boost = false;
     let gx = null, gz = null;
+    const H = this.haz;
+    if (H && H.darkT > 0) { // lights out: can't see a thing, so it just dashes about
+      if (!(ai.pt > 0)) { ai.pt = rnd(0.4, 1.2); ai.pdir = s.dir + rnd(-1.6, 1.6); ai.pboost = Math.random() < 0.5; }
+      ai.pt -= ai.t + 0.2; gx = s.x + Math.cos(ai.pdir) * 20; gz = s.z + Math.sin(ai.pdir) * 20; s.boost = ai.pboost;
+    } else if (H && H.spider && H.spider.state === 'walk' && Math.hypot(H.spider.x - s.x, H.spider.z - s.z) < 22 && Math.random() < 0.85) { // run from the bed spider
+      gx = s.x + (s.x - H.spider.x) * 2; gz = s.z + (s.z - H.spider.z) * 2; s.boost = true;
+    }
+    if (gx === null) {
     // threat: enemy head close behind my tail -> run & boost
     for (const o of this.snakes) {
       if (o === s || !o.alive) continue;
@@ -1236,6 +1348,7 @@ const Sim = {
         const score = d - ahead * 6;
         if (score < fd) { fd = score; gx = p.x; gz = p.z; }
       }
+    }
     }
     if (gx === null) { // wander towards a random spot, picking a new one on arrival
       if (!ai.wx || Math.hypot(ai.wx - s.x, ai.wz - s.z) < 5) { const p = randomFree(4); ai.wx = p.x; ai.wz = p.z; }
@@ -1542,7 +1655,7 @@ function makeBedroom(k) {
   const hoop = (g, w, h) => { const sk = g.createLinearGradient(0, 0, 0, h); sk.addColorStop(0, '#2b2d5a'); sk.addColorStop(.6, '#e88a5a'); sk.addColorStop(1, '#f5c27a'); g.fillStyle = sk; g.fillRect(0, 0, w, h); g.strokeStyle = '#1a1a1a'; g.lineWidth = 5; g.beginPath(); g.moveTo(w * .85, h * .1); g.lineTo(w * .6, h * .35); g.lineTo(w * .45, h * .35); g.stroke(); g.beginPath(); g.ellipse(w * .45, h * .4, w * .1, h * .04, 0, 0, 6.29); g.stroke(); };
   [[-33.7, mountain], [-16, pad], [0.7, hoop]].forEach(([x, fn]) => { add(new THREE.BoxGeometry(14.5, 3, 0.25), std('#1b1b1d', 0.4), x, 3, -H / 2 + 0.4); const m = add(new THREE.PlaneGeometry(13.3, 2.4), std('#ffffff', 0.5), x, 3, -H / 2 + 0.55, false); m.material.map = cv(256, 160, fn); });
   // bed: grey frame + headboard, white mattress, navy duvet with two stripes, green knit throw, pillows
-  { const o = MAP.obstacles[0]; group();
+  { const o = MAP.bed; group(); // drawn as a solid block: from outside you can't see under it (it only fades while YOU are under it)
     box(o, 1.0, std('#4c4c50', 0.85));
     add(new THREE.BoxGeometry(2.6, 3.8, o.z1 - o.z0), std('#56565a', 0.95), o.x0 + 1.3, 1.9, (o.z0 + o.z1) / 2);
     add(new THREE.BoxGeometry(61, 1.3, 37.2), std('#ece8e2', 0.85), -27.3, 1.65, -24);
@@ -1721,6 +1834,7 @@ function buildMap(id) {
   k.group(null);
   mapShower = MAP.shower ? makeShower(mapRoot) : null;
   MAP = MAPS[id]; mapRoot.scale.setScalar(MAP_SCALE);
+  makeHazards(); // field-effect props live in world units, outside the scaled room
   // each group gets its own copies of its materials, so fading the toilet doesn't fade the tub
   scene.updateMatrixWorld(true);
   for (const g of fadeGroups) {
@@ -1751,7 +1865,7 @@ function updateFade(dt, s) {
     }
     const a = g.a + ((hide ? 0.3 : 1) - g.a) * Math.min(1, dt * 8);
     g.a = Math.abs(a - 1) < 0.01 ? 1 : a;
-    for (const m of g.mats) { m.opacity = g.a; m.transparent = g.a < 1; }
+    for (const m of g.mats) { m.opacity = g.a; m.transparent = g.a < 1; m.depthWrite = g.a >= 1; } // a faded fixture must not hide see-through things behind it (a blinking snake under the bed)
   }
 }
 
@@ -2596,6 +2710,12 @@ function handleEvents() {
     }
     if (ev.type === 'eject') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(T('toast.ejected', { name: nameOf(B) })); if (B === me) toast(T('toast.eject', { name: nameOf(A) })); continue; }
     if (ev.type === 'tissue') { if (A === me) toast(T('toast.tissue')); continue; }
+    if (ev.type === 'slide') { if (A === me) toast(T('toast.soap')); continue; }
+    if (ev.type === 'alarm') { toast(T('toast.alarm')); hazFx.alarm(); continue; }
+    if (ev.type === 'dark') { toast(T('toast.dark')); continue; }
+    if (ev.type === 'lightsOn') continue;
+    if (ev.type === 'caught') { if (A === me) toast(T('toast.caught')); continue; }
+    if (ev.type === 'spiderRevive') { dropView(ev.a); if (A === me) toast(T('toast.revive')); continue; }
     if (ev.type === 'item') { spawnSplash(ev.x, 1, ev.z, 1, 0, '#dff4ff'); if (A === me) toast(T('toast.gotItem', { item: T('item.' + ev.item) })); continue; }
     if (ev.type === 'useItem') { if (A === me) toast(T('toast.use.' + ev.item)); continue; }
     if (ev.type === 'bubble') { if (A === me) toast(T('toast.bubble')); continue; }
@@ -2605,12 +2725,12 @@ function handleEvents() {
     if (ev.type === 'revive') { dropView(ev.b); spawnJelly(ev); if (B === me) toast(T('toast.revive')); continue; }
     if (ev.type === 'squeeze') { spawnSplash(ev.x, A ? A.r : 1, ev.z, 1, 0, '#ffffff'); if (A === me) toast(T('toast.squeeze', { name: nameOf(B) })); continue; }
     if (ev.type !== 'merged') continue;
-    dropView(ev.b); spawnJelly(ev);
+    dropView(ev.b); if (!ev.spider) spawnJelly(ev); // the spider leaves a silk ball, not a puddle
     if (A === me) toast(T(ev.rev ? 'toast.reverse' : 'toast.plugged', { name: nameOf(B) }));
     if (tut) { tutMerged(A, B); continue; }
     if (B === me) {
-      running = false; camFollow = A;
-      document.getElementById('overTitle').textContent = T('over.by', { name: nameOf(A) });
+      running = false; camFollow = A || me;
+      document.getElementById('overTitle').textContent = ev.spider ? T('over.spider') : T('over.by', { name: nameOf(A) });
       document.getElementById('overStats').textContent = T('over.stats', { len: me.bestLen.toFixed(1), n: me.absorbed })
         + (br ? '\n' + T('over.rank', { rank: Sim.snakes.filter(s => s.alive).length + 1, n: brN }) : '')
         + (endless ? '\n' + T('over.endless', { n: round, cards: cardList() }) : '');
@@ -2638,7 +2758,7 @@ let hudT = 0;
 const ARROW_AT = 10, arrowsEl = document.getElementById('arrows'), arrowPool = [], _ap = new THREE.Vector3();
 function updateArrows() {
   let used = 0;
-  const on = (br || endless) && me && me.alive && running; // 吃雞 (at ARROW_AT or fewer) and 無限 (always, whatever the map's snake count)
+  const on = (br || endless) && me && me.alive && running && !(Sim.haz && (Sim.haz.darkT > 0 || Sim.haz.warnT > 0)); // (hidden in the dark) 吃雞 (at ARROW_AT or fewer) and 無限 (always, whatever the map's snake count)
   const alive = on ? Sim.snakes.filter(s => s.alive && s !== me) : [];
   if (on && (endless || alive.length + 1 <= ARROW_AT)) { // v86 gave picnic 16 snakes, which hid 無限's arrows behind the 吃雞 limit
     const W = window.innerWidth, H = window.innerHeight, pad = 22, cx = W / 2, cy = H / 2;
@@ -2803,7 +2923,7 @@ function frame(now) {
     if (s.whipT > 0) pourTail(s, dt * 3);
     if (s.spraying) sprayJet(s, dt);
   }
-  updateTraps(dt);
+  updateTraps(dt); updateHazards(dt, t);
   updateOrbs(dt); updateItemBtn();
   // food
   const f = Sim.food, fn = Math.min(f.length, FOOD_MAX);
@@ -2828,15 +2948,130 @@ function frame(now) {
     camPos.lerp(new THREE.Vector3(tgt.x, 30 * z, tgt.z + 21 * z), Math.min(1, dt * 4));
     camLook.lerp(new THREE.Vector3(tgt.x, 0, tgt.z), Math.min(1, dt * 6));
     camera.position.copy(camPos); camera.lookAt(camLook);
+    if (hazFx.shakeT > 0) { hazFx.shakeT -= dt; camera.position.x += (Math.random() - 0.5) * 0.9; camera.position.y += (Math.random() - 0.5) * 0.6; } // alarm ring
     sun.position.set(camLook.x - 18, 40, camLook.z + 12); sun.target.position.copy(camLook);
   }
   updateFade(dt, tgt);
+  updateDark(dt, tgt);
   updateSkillBtn();
   if (tut) updateTut(dt);
   hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHud(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.classList.remove('show'); }
   renderer.render(scene, camera);
   updateArrows();
+}
+
+// ---- field effects (see Sim.stepHazards): soap + foam trail, hair dryer + wind, alarm rings, lights-out overlay, bed spider + web ----
+let hazRoot = null;
+const hazFx = { shakeT: 0, rings: [], alarm() { this.shakeT = 0.6; if (!hazRoot || !MAP.alarm) return; for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ffd166', transparent: true, depthWrite: false })); m.position.set(MAP.alarm.x, 7.6, MAP.alarm.z); m.visible = false; hazRoot.add(m); this.rings.push({ m, t: -i * 0.3 }); } } };
+const hazTex = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; };
+function makeHazards() {
+  if (hazRoot) { scene.remove(hazRoot); hazRoot.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
+  hazRoot = new THREE.Group(); scene.add(hazRoot); hazFx.rings = [];
+  const H = hazRoot.userData;
+  if (MAP.soap) { // pink bar of soap with a few bubbles on it, and a pool of foam patches for its trail
+    const g = new THREE.Group(), bar = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 14), new THREE.MeshStandardMaterial({ color: '#ffc4dc', roughness: 0.2 }));
+    bar.scale.set(2.7, 1.0, 1.7); bar.position.y = 1.0; bar.castShadow = true; g.add(bar);
+    const bub = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.1, transparent: true, opacity: 0.75 });
+    for (const [x, z, r] of [[-0.8, 0.4, 0.45], [0.4, -0.3, 0.6], [1.2, 0.5, 0.35]]) { const b = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), bub); b.position.set(x, 1.9, z); g.add(b); }
+    g.visible = false; hazRoot.add(g); H.soap = g;
+    const foam = hazTex(128, 128, (c, w, h) => { for (let i = 0; i < 26; i++) { const x = 20 + Math.random() * 88, y = 20 + Math.random() * 88, r = 5 + Math.random() * 13; c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill(); c.strokeStyle = 'rgba(200,225,255,.9)'; c.lineWidth = 2; c.stroke(); } });
+    const fg = new THREE.PlaneGeometry(4.6, 4.6).rotateX(-Math.PI / 2);
+    H.foam = []; for (let i = 0; i < 48; i++) { const m = new THREE.Mesh(fg, new THREE.MeshBasicMaterial({ map: foam, transparent: true, depthWrite: false, opacity: 0 })); m.visible = false; m.renderOrder = 2; hazRoot.add(m); H.foam.push(m); }
+  }
+  const D = MAP.dryer;
+  if (D) { // a mint hair dryer lying on the floor, nozzle pointing into the room (local +x = backwards from the nozzle)
+    const g = new THREE.Group(), mint = new THREE.MeshStandardMaterial({ color: '#7fd0c4', roughness: 0.35 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 8, 24).rotateZ(Math.PI / 2), mint); body.position.set(5.6, 2.3, 0); body.castShadow = true; g.add(body);
+    const back = new THREE.Mesh(new THREE.SphereGeometry(2.3, 20, 12), mint); back.scale.set(0.5, 1, 1); back.position.set(9.6, 2.3, 0); g.add(back);
+    H.nozzle = new THREE.MeshStandardMaterial({ color: '#4a5560', roughness: 0.5, emissive: '#ff8a3d', emissiveIntensity: 0 });
+    const noz = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.0, 2, 20).rotateZ(Math.PI / 2), H.nozzle); noz.position.set(0.8, 2.3, 0); g.add(noz);
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(2, 1.6, 5.2), mint); handle.position.set(6.4, 0.8, 3.4); handle.castShadow = true; g.add(handle);
+    g.position.set(D.x, 0, D.z); g.rotation.y = -Math.atan2(-D.dz, -D.dx); hazRoot.add(g);
+    // wind zone on the floor and moving streaks
+    const sh = new THREE.Shape(); sh.moveTo(0, -D.w / 2); sh.lineTo(D.len, -(D.w / 2 + D.len * 0.18)); sh.lineTo(D.len, D.w / 2 + D.len * 0.18); sh.lineTo(0, D.w / 2); sh.closePath();
+    H.zone = new THREE.Mesh(new THREE.ShapeGeometry(sh).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    H.zone.position.set(D.x, 0.08, D.z); H.zone.rotation.y = -Math.atan2(D.dz, D.dx); hazRoot.add(H.zone);
+    const sg = new THREE.PlaneGeometry(6, 0.3).rotateX(-Math.PI / 2);
+    H.streaks = []; for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); m.userData = { u: Math.random(), v: Math.random() * 2 - 1, y: 1 + Math.random() * 3 }; hazRoot.add(m); H.streaks.push(m); }
+  }
+  if (MAP.under) { // the spider: round, plum-coloured, big eyes, eight wiggly legs (local +x = forward)
+    const g = new THREE.Group(), plum = new THREE.MeshStandardMaterial({ color: '#5a4778', roughness: 0.55 });
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 16), plum); body.scale.set(1.1, 0.95, 1); body.position.set(-0.6, 1.9, 0); body.castShadow = true; g.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 14), plum); head.position.set(1.3, 1.6, 0); g.add(head);
+    const white = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.3 }), black = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.2 }), pink = new THREE.MeshStandardMaterial({ color: '#ff9cc4', roughness: 0.6 });
+    for (const s of [-1, 1]) {
+      const e = new THREE.Mesh(new THREE.SphereGeometry(0.48, 14, 10), white); e.position.set(2.05, 2.05, s * 0.5); g.add(e);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 8), black); p.position.set(2.45, 2.1, s * 0.5); g.add(p);
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), pink); c.scale.set(0.5, 0.7, 1); c.position.set(2.2, 1.45, s * 0.85); g.add(c);
+    }
+    const legM = new THREE.MeshStandardMaterial({ color: '#3e3057', roughness: 0.6 }), upG = new THREE.CylinderGeometry(0.22, 0.22, 2.4, 8).translate(0, 1.2, 0), loG = new THREE.CylinderGeometry(0.2, 0.12, 2.6, 8).translate(0, -1.3, 0);
+    H.legs = [];
+    for (let i = 0; i < 8; i++) {
+      const side = i < 4 ? 1 : -1, k = i % 4, piv = new THREE.Group(); piv.position.set(-0.2 + (1.5 - k) * 0.55, 1.7, side * 0.9); g.add(piv);
+      const up = new THREE.Mesh(upG, legM); up.rotation.x = side * 1.0; piv.add(up);
+      const knee = new THREE.Group(); knee.position.set(0, 2.4 * Math.cos(1.0), side * 2.4 * Math.sin(1.0)); piv.add(knee);
+      knee.add(new THREE.Mesh(loG, legM)); knee.rotation.x = side * 0.15;
+      piv.rotation.y = (1.5 - k) * 0.38 * side; H.legs.push({ piv, base: piv.rotation.y, ph: k * 1.6 + (side > 0 ? 0 : 0.8) });
+    }
+    hazRoot.add(g); H.spider = g;
+    const silk = hazTex(128, 64, (c, w, h) => { c.fillStyle = '#f7f5f0'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(150,150,160,.55)'; c.lineWidth = 2; for (let i = -8; i < 16; i++) { c.beginPath(); c.moveTo(i * 10, 0); c.lineTo(i * 10 + 40, h); c.stroke(); c.beginPath(); c.moveTo(i * 10 + 40, 0); c.lineTo(i * 10, h); c.stroke(); } });
+    H.ballGeo = new THREE.SphereGeometry(1, 20, 14);
+    const mkBall = () => { const m = new THREE.Mesh(H.ballGeo, new THREE.MeshStandardMaterial({ map: silk, roughness: 0.8 })); m.castShadow = true; m.visible = false; hazRoot.add(m); return m; };
+    H.carry = mkBall(); H.webBalls = []; for (let i = 0; i < 6; i++) H.webBalls.push(mkBall());
+    H.thread = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#ffffff' })); H.thread.visible = false; H.thread.frustumCulled = false; hazRoot.add(H.thread);
+    // the web: spokes and sagging threads, lying in the top-left corner
+    const pts = [], R = 14, A = i => i / 9 * Math.PI / 2;
+    for (let i = 0; i < 10; i++) pts.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(Math.cos(A(i)) * R, 0, Math.sin(A(i)) * R));
+    for (let r = 2.5; r < R; r += 2.2) for (let i = 0; i < 9; i++) { const a0 = A(i), a1 = A(i + 1), am = (a0 + a1) / 2, mid = new THREE.Vector3(Math.cos(am) * r * 0.9, 0, Math.sin(am) * r * 0.9); pts.push(new THREE.Vector3(Math.cos(a0) * r, 0, Math.sin(a0) * r), mid, mid.clone(), new THREE.Vector3(Math.cos(a1) * r, 0, Math.sin(a1) * r)); }
+    const web = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85 }));
+    web.position.set(MAP.under.x0, 0.1, MAP.under.z0); hazRoot.add(web);
+  }
+}
+function updateHazards(dt, t) {
+  const S = Sim.haz, H = hazRoot && hazRoot.userData; if (!H) return;
+  for (let i = hazFx.rings.length - 1; i >= 0; i--) { const r = hazFx.rings[i]; r.t += dt; const k = Math.max(0, r.t) / 1.1; r.m.visible = r.t >= 0; r.m.scale.setScalar(2 + k * 16); r.m.material.opacity = 0.9 * (1 - k); if (k >= 1) { hazRoot.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); hazFx.rings.splice(i, 1); } }
+  if (H.soap) {
+    const sp = S && S.soap; H.soap.visible = !!sp;
+    if (sp) { H.soap.position.set(sp.x, groundY(sp.x, sp.z), sp.z); H.soap.rotation.y = -sp.a + Math.sin(t * 9) * 0.15; H.soap.scale.setScalar(Math.max(0.01, Math.min(1, sp.t / 0.3, (sp.life - sp.t) / 0.4))); }
+    const tr = S ? S.trail : [];
+    for (let i = 0; i < H.foam.length; i++) { const m = H.foam[i], p = tr[tr.length - 1 - i]; m.visible = !!p; if (!p) continue; m.position.set(p.x, groundY(p.x, p.z) + 0.06, p.z); m.rotation.y = -p.a + i; m.material.opacity = 0.75 * Math.min(1, (8 - p.t) / 1.5, p.t / 0.2); }
+  }
+  if (H.zone) {
+    const D = MAP.dryer, d0 = S ? S.dryT : 0, on = d0 >= 7.2, warn = d0 >= 6 && !on;
+    H.nozzle.emissiveIntensity = on ? 1.2 : warn ? 0.6 + 0.6 * Math.sin(t * 20) : 0;
+    H.zone.material.opacity = on ? 0.12 : warn ? 0.06 + 0.05 * Math.sin(t * 20) : 0;
+    for (const m of H.streaks) { const d = m.userData; if (on) d.u += dt * 1.1; if (d.u > 1) { d.u -= 1; d.v = Math.random() * 2 - 1; }
+      const u = d.u * D.len, half = D.w / 2 + u * 0.18, v = d.v * half;
+      m.position.set(D.x + D.dx * u - D.dz * v, d.y, D.z + D.dz * u + D.dx * v); m.rotation.y = -Math.atan2(D.dz, D.dx);
+      m.material.opacity = on ? 0.55 * Math.sin(Math.PI * d.u) : 0; }
+  }
+  if (H.spider && S && S.spider) {
+    const sp = S.spider, g = H.spider, moving = sp.state === 'walk' || sp.state === 'carry';
+    g.position.set(sp.x, Math.abs(Math.sin(t * 9)) * (moving ? 0.25 : 0.05), sp.z); g.rotation.y = -sp.dir;
+    for (const l of H.legs) l.piv.rotation.y = l.base + (moving ? Math.sin(t * 12 + l.ph) * 0.3 : Math.sin(t * 3 + l.ph) * 0.05);
+    const b = sp.ball; H.carry.visible = !!b;
+    if (b) { const r = b.size; H.carry.scale.setScalar(r); H.carry.material.color.set('#ffffff').lerp(new THREE.Color(b.color), 0.25);
+      if (sp.state === 'reel') H.carry.position.set(sp.x + Math.cos(sp.dir) * (2.6 + r * 0.6), r, sp.z + Math.sin(sp.dir) * (2.6 + r * 0.6));
+      else H.carry.position.set(sp.x - Math.cos(sp.dir) * 0.6, 3.6 + r * 0.85, sp.z - Math.sin(sp.dir) * 0.6); }
+    const v = sp.victim; H.thread.visible = !!(v && sp.state === 'reel');
+    if (H.thread.visible) { const P = H.thread.geometry.attributes.position; P.setXYZ(0, sp.x + Math.cos(sp.dir) * 2.2, 1.6, sp.z + Math.sin(sp.dir) * 2.2); P.setXYZ(1, v.x, v.r, v.z); P.needsUpdate = true; }
+    for (let i = 0; i < H.webBalls.length; i++) { const m = H.webBalls[i], wb = S.webBalls[i]; m.visible = !!wb; if (!wb) continue;
+      const a = 0.2 + i * 0.24, rr = 5 + (i % 3) * 3; m.scale.setScalar(wb.size * 0.9); m.material.color.set('#ffffff').lerp(new THREE.Color(wb.color), 0.25);
+      m.position.set(MAP.under.x0 + Math.cos(a) * rr, wb.size * 0.9, MAP.under.z0 + Math.sin(a) * rr); }
+  }
+}
+const darkOv = document.getElementById('darkOv'), _dk = new THREE.Vector3(); let darkA = 0;
+function updateDark(dt, tgt) {
+  const S = Sim.haz, warn = !!(S && S.warnT > 0 && running), dark = !!(S && S.darkT > 0 && running);
+  const goal = dark ? 1 : warn ? (Math.sin(performance.now() / 25) > 0.2 ? 0.75 : 0) : 0;
+  darkA = warn ? goal : darkA + (goal - darkA) * Math.min(1, dt * (dark ? 5 : 3));
+  if (darkA < 0.01) { darkA = 0; if (darkOv.style.opacity !== '0') darkOv.style.opacity = '0'; return; }
+  const c = tgt || me; let x = innerWidth / 2, y = innerHeight / 2, r = 160;
+  if (c) { _dk.set(c.x, 0, c.z).project(camera); x = (_dk.x + 1) / 2 * innerWidth; y = (1 - _dk.y) / 2 * innerHeight;
+    const r0 = _dk.x; _dk.set(c.x + 16, 0, c.z).project(camera); r = Math.max(80, Math.abs(_dk.x - r0) / 2 * innerWidth); }
+  darkOv.style.background = `radial-gradient(circle at ${x.toFixed(0)}px ${y.toFixed(0)}px, rgba(4,6,18,0) ${(r * 0.45).toFixed(0)}px, rgba(4,6,18,.95) ${r.toFixed(0)}px)`;
+  darkOv.style.opacity = darkA.toFixed(3);
 }
 
 // ---- bedroom traps: crumpled tissues, the condom (on the floor / flying from the bed) and the bubble it puts around a snake ----
